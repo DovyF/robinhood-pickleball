@@ -1,0 +1,134 @@
+import Link from "next/link";
+import { Zap, DollarSign, ShieldCheck, Trophy, Crosshair, Heart } from "lucide-react";
+
+/**
+ * The Longbow — single-product landing page.
+ * Faithful React port of the live robinhoodpickleball.com custom sections.
+ * Brand images are served from the store's Shopify CDN.
+ */
+
+const HERO_BG = "/brand/hero-bg.jpg";
+const HERO_OVERLAY = "/brand/hero-overlay.png";
+const PADDLE_IMG = "/brand/longbow-1.png";
+
+const PRODUCT_HREF = "/products/the-longbow";
+
+export function LongbowLanding() {
+  return (
+    <>
+      {/* ── Layered hero ─────────────────────────────────────── */}
+      <section className="relative w-full overflow-hidden bg-black" style={{ height: "100svh" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HERO_BG}
+          alt="The Longbow paddle"
+          className="animate-paddle-ambient h-full w-full object-cover"
+          style={{ objectPosition: "center 70%" }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HERO_OVERLAY}
+          alt="Built for Battles. Made to Win."
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+        />
+      </section>
+
+      {/* ── Feature bar ──────────────────────────────────────── */}
+      <section className="border-y" style={{ background: "#0d0d0d", borderColor: "#8dc63f" }}>
+        <div className="container-x grid gap-6 py-9 text-center sm:grid-cols-3 sm:text-left">
+          {[
+            { Icon: Trophy, h: "PREMIUM PERFORMANCE", s: "Same materials as $200 paddles." },
+            { Icon: Crosshair, h: "POWER. CONTROL. SPIN.", s: "Engineered for players who compete." },
+            { Icon: Heart, h: "GIVE BACK", s: "10% of profits donated to those in need." },
+          ].map(({ Icon, h, s }) => (
+            <div key={h} className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
+              <Icon size={34} strokeWidth={1.5} className="shrink-0 text-forest-400" />
+              <div>
+                <p className="text-[13px] font-bold uppercase tracking-wide text-white">{h}</p>
+                <p className="text-[13px] text-ink-soft">{s}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Product showcase ─────────────────────────────────── */}
+      <section className="animate-fade-up bg-black px-6 py-16 sm:px-10">
+        <div className="mx-auto grid max-w-[1200px] items-center gap-10 md:grid-cols-2 md:gap-[60px]">
+          <div className="overflow-hidden rounded-lg" style={{ background: "#0d0d0d" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={PADDLE_IMG} alt="The Longbow paddle" className="block h-auto w-full object-cover" />
+          </div>
+
+          <div>
+            <span className="mb-4 block text-xs font-bold uppercase tracking-[0.1em] text-forest-700">The Paddle</span>
+            <h2 className="font-display text-6xl leading-[1.1] tracking-wide text-ink">The Longbow</h2>
+            <p className="mt-6 text-base leading-relaxed text-ink-soft">
+              An explosively powerful paddle with a controlled, forgiving feel.
+            </p>
+
+            <div className="my-8 flex flex-col gap-6">
+              {[
+                { h: "Explosive pop. Controlled spin.", d: "A 3-layered carbon fiber + fiberglass + carbon fiber face delivers power without sacrificing touch." },
+                { h: "Forgiving across the entire face.", d: "A notched foam core expands the sweet spot and reduces mishits." },
+                { h: "Fast hands at the kitchen.", d: "Low swing weight and balanced feel for quick reactions and resets." },
+              ].map((f) => (
+                <div key={f.h} className="border-l-2 pl-5" style={{ borderColor: "#27272a" }}>
+                  <h3 className="text-lg font-bold leading-snug text-ink">{f.h}</h3>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: "#71717a" }}>{f.d}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mb-3 flex items-center gap-4">
+              <span className="font-display text-5xl text-forest-700">$99.99</span>
+              <span className="text-lg text-ink-soft line-through">$115</span>
+              <span className="rounded bg-forest-700 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[#0d0d0d]">Save $15</span>
+            </div>
+
+            <div className="mb-8 flex items-center gap-2 text-sm text-forest-700">
+              <Heart size={16} className="shrink-0" />
+              10% of profits donated to those in need.
+            </div>
+
+            <Link href={PRODUCT_HREF} className="btn btn-primary">View Details</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why this paddle ──────────────────────────────────── */}
+      <section className="px-6 py-20 sm:px-10" style={{ background: "#0d0d0d" }}>
+        <div className="mx-auto max-w-[1200px]">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <h2 className="font-display text-5xl leading-tight tracking-wide text-ink sm:text-6xl">
+              Why <span className="text-forest-700">This Paddle</span>
+            </h2>
+            <p className="mt-6 text-lg leading-relaxed text-ink-soft">
+              We got tired of seeing players pay $250 for paddles. So we built one ourselves. For everyone.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            {[
+              { Icon: Zap, h: "High-Level Performance", d: "Built with the same materials used in premium paddles. No shortcuts." },
+              { Icon: DollarSign, h: "Fair, Honest Pricing", d: "We cut out the markup, not the quality. You pay for the paddle, not the hype." },
+              { Icon: ShieldCheck, h: "Built to Last", d: "Durable construction designed for thousands of games. We stand behind every paddle." },
+            ].map(({ Icon, h, d }) => (
+              <div
+                key={h}
+                className="group rounded-xl border p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:border-forest-700/50 hover:shadow-glow"
+                style={{ background: "#141414", borderColor: "#2e2e2e" }}
+              >
+                <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-full text-forest-700" style={{ background: "rgba(109,179,63,0.1)" }}>
+                  <Icon size={30} />
+                </div>
+                <h3 className="font-display text-2xl tracking-wide text-ink">{h}</h3>
+                <p className="mt-3 text-base leading-relaxed text-ink-soft">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
