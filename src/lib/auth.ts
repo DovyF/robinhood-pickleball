@@ -3,15 +3,14 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { STAFF_ROLES } from "@/lib/enums";
+import { authConfig } from "@/lib/auth.config";
 
-// Auth.js v5 config. Uses JWT session strategy (required for the Credentials
-// provider). Roles are carried in the token so middleware/pages can gate access.
+// Auth.js v5 full config (Node runtime). Extends the Edge-safe base config in
+// auth.config.ts with the Credentials provider, which needs Prisma + bcrypt.
+// Uses JWT session strategy; roles are carried in the token (see auth.config
+// callbacks) so middleware/pages can gate access.
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/account/login",
-  },
-  trustHost: true,
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -39,22 +38,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) {
-        token.id = (user as { id: string }).id;
-        token.role = (user as { role?: string }).role ?? "customer";
-      }
-      return token;
-    },
-    session: async ({ session, token }) => {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = (token.role as string) ?? "customer";
-      }
-      return session;
-    },
-  },
 });
 
 export function isStaff(role?: string | null): boolean {
