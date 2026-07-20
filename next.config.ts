@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    turbopack: false,
     // server actions body size for image uploads
     serverActions: { bodySizeLimit: "8mb" },
   },
