@@ -87,7 +87,7 @@ export function FulfillmentQueue({ orders }: { orders: any[] }) {
           <div className="flex items-center gap-3">
             <Checkbox
               checked={selected.size === orders.length && orders.length > 0}
-              onCheckedChange={selectAll}
+              onChange={selectAll}
             />
             <span className="text-sm font-medium text-ink-soft">
               {selected.size > 0
@@ -142,7 +142,7 @@ export function FulfillmentQueue({ orders }: { orders: any[] }) {
               <div className="flex items-start gap-4">
                 <Checkbox
                   checked={selected.has(order.id)}
-                  onCheckedChange={() => toggleOrder(order.id)}
+                  onChange={() => toggleOrder(order.id)}
                 />
 
                 <div className="flex-1 min-w-0">
