@@ -17,7 +17,19 @@ interface Order {
   shippingMethod?: string | null;
   shippingAddressJson: string | null;
   createdAt: Date;
-  items: Array<{ id: string; title: string; imageUrl?: string; quantity: number }>;
+  items: Array<{
+    id: string;
+    title: string;
+    imageUrl: string | null;
+    quantity: number;
+    price?: number;
+    sku?: string | null;
+    productId?: string | null;
+    variantId?: string | null;
+    variantTitle?: string | null;
+    fulfilledQty?: number;
+    refundedQty?: number;
+  }>;
 }
 
 export function FulfillmentQueue({ orders }: { orders: Order[] }) {
