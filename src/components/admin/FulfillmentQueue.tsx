@@ -15,7 +15,7 @@ interface Order {
   email: string;
   total: number;
   shippingMethod?: string | null;
-  shippingAddressJson: string;
+  shippingAddressJson: string | null;
   createdAt: Date;
   items: Array<{ id: string; title: string; imageUrl?: string; quantity: number }>;
 }
