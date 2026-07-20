@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     turbopack: false,
+    // server actions body size for image uploads
+    serverActions: { bodySizeLimit: "8mb" },
   },
   images: {
     remotePatterns: [
@@ -11,10 +13,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
     ],
     formats: ["image/avif", "image/webp"],
-  },
-  experimental: {
-    // server actions body size for image uploads
-    serverActions: { bodySizeLimit: "8mb" },
   },
 };
 
