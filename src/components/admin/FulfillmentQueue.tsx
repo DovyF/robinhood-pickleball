@@ -7,32 +7,10 @@ import { Card } from "./ui";
 import { formatMoney, formatDate, safeJson } from "@/lib/utils";
 import { Printer, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { CheckoutAddress } from "@/lib/orders";
+import type { OrderWithItems } from "@/types/orders";
 import { generatePirateShipLabel, fulfillOrdersAction } from "@/app/actions/admin/fulfillment";
 
-interface Order {
-  id: string;
-  orderNumber: number;
-  email: string;
-  total: number;
-  shippingMethod?: string | null;
-  shippingAddressJson: string | null;
-  createdAt: Date;
-  items: Array<{
-    id: string;
-    title: string;
-    imageUrl: string | null;
-    quantity: number;
-    price?: number;
-    sku?: string | null;
-    productId?: string | null;
-    variantId?: string | null;
-    variantTitle?: string | null;
-    fulfilledQty?: number;
-    refundedQty?: number;
-  }>;
-}
-
-export function FulfillmentQueue({ orders }: { orders: Order[] }) {
+export function FulfillmentQueue({ orders }: { orders: OrderWithItems[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
