@@ -158,7 +158,7 @@ export function FulfillmentQueue({ orders }: { orders: any[] }) {
                   <p className="text-sm text-ink-soft mb-2">{order.email}</p>
 
                   <div className="flex items-center gap-2 mb-3">
-                    {order.items.slice(0, 3).map((item) => (
+                    {order.items.slice(0, 3).map((item: any) => (
                       <div
                         key={item.id}
                         className="relative h-10 w-10 rounded-lg bg-cream-dark overflow-hidden"
