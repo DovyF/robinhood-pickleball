@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles, RotateCcw, Heart } from "lucide-react";
-import { IMG, PRICE, PRODUCT_HREF } from "./longbow-data";
+import { PRICE, PRODUCT_HREF } from "./longbow-data";
 
 /**
  * "The Reckoning" hero — the price anchor IS the headline. Built like $250
@@ -53,13 +53,9 @@ export function HeroReckoning({ unitsLeft = 190 }: { unitsLeft?: number }) {
         <div className="relative flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={IMG.face}
+            src="/brand/longbow-1-cutout.png"
             alt="The Longbow pickleball paddle"
             className="animate-hero-float mx-auto h-auto max-h-[40svh] w-auto max-w-full object-contain md:max-h-[66svh]"
-            style={{
-              WebkitMaskImage: "radial-gradient(ellipse 70% 74% at 50% 47%, #000 55%, transparent 100%)",
-              maskImage: "radial-gradient(ellipse 70% 74% at 50% 47%, #000 55%, transparent 100%)",
-            }}
           />
         </div>
       </div>
