@@ -252,7 +252,7 @@ async function main() {
         align: "left",
       }),
     },
-    { type: "logo_list", title: "As trusted by", position: 1, settingsJson: JSON.stringify({ items: ["USAPA Approved", "Free Shipping $75+", "30-Day Returns", "2-Year Warranty"] }) },
+    { type: "logo_list", title: "As trusted by", position: 1, settingsJson: JSON.stringify({ items: ["USAPA Certification In Progress", "21-Day Returns", "6-Month Warranty", "10% Donated"] }) },
     { type: "featured_collection", title: "Best Sellers", position: 2, settingsJson: JSON.stringify({ collectionSlug: "paddles", limit: 4, source: "featured" }) },
     {
       type: "image_banner",
@@ -280,9 +280,9 @@ async function main() {
 
   // ---- Pages ----
   const pages = [
-    { title: "About", slug: "about", body: "<h2>Our Story</h2><p>Robinhood Pickleball was founded on a simple idea: elite pickleball gear shouldn't cost a fortune. We cut out the middlemen and the inflated brand markups so you get tournament-quality paddles, balls, and gear at honest prices.</p><p>Every paddle is USAPA approved and backed by a 2-year warranty. Play more. Pay less.</p>" },
-    { title: "FAQ", slug: "faq", body: "<h2>Frequently Asked Questions</h2><h3>Are your paddles tournament legal?</h3><p>Yes — every paddle we sell is USAPA/USA Pickleball approved for sanctioned play.</p><h3>What's your return policy?</h3><p>30-day returns on unused gear, no questions asked.</p><h3>How fast is shipping?</h3><p>Orders ship within 1 business day. Free standard shipping on orders over $75.</p><h3>Do you offer a warranty?</h3><p>All paddles carry a 2-year manufacturer warranty against defects.</p>" },
-    { title: "Shipping & Returns", slug: "shipping-returns", body: "<h2>Shipping</h2><p>Free standard shipping on orders over $75. Orders placed before 2pm ET ship same day. Expedited and overnight options available at checkout.</p><h2>Returns</h2><p>Not happy? Return unused items within 30 days for a full refund. We'll email you a prepaid label.</p>" },
+    { title: "About", slug: "about", body: "<h2>Our Story</h2><p>Robinhood Pickleball was founded on a simple idea: elite pickleball gear shouldn't cost a fortune. We cut out the middlemen and the inflated brand markups so you get tournament-quality paddles at honest prices.</p><p>The Longbow is built to tournament spec — official USAPA certification is in progress — and every paddle is backed by a 6-month warranty against manufacturing defects. Play more. Pay less.</p>" },
+    { title: "FAQ", slug: "faq", body: "<h2>Frequently Asked Questions</h2><h3>Are your paddles tournament legal?</h3><p>For rec play, drills, and casual leagues — absolutely, today. Official USAPA certification for sanctioned tournaments is in progress.</p><h3>What's your return policy?</h3><p>21-day money-back guarantee on unused gear, no questions asked.</p><h3>How fast is shipping?</h3><p>Ships from the US via USPS — Ground Advantage or Priority Mail, calculated to your address at checkout.</p><h3>Do you offer a warranty?</h3><p>Every paddle carries a 6-month warranty against manufacturing defects.</p>" },
+    { title: "Shipping & Returns", slug: "shipping-returns", body: "<h2>Shipping</h2><p>Ships from the US via USPS — Ground Advantage or Priority Mail, calculated to your address at checkout.</p><h2>Returns</h2><p>Not happy? Return unused items within 21 days for a full refund.</p>" },
   ];
   for (const pg of pages) {
     await prisma.page.deleteMany({ where: { slug: pg.slug } });
