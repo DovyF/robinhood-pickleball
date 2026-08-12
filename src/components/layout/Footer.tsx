@@ -20,7 +20,7 @@ export function Footer({ nav }: { nav: FooterNavItem[] }) {
         <div className="md:col-span-1">
           <Logo light />
           <p className="mt-4 max-w-xs text-sm text-ink-soft">
-Tournament-grade pickleball at an honest price. 10% of profits donated to those in need.
+Tournament-grade pickleball at an honest price. 10% of every sale donated to those in need.
           </p>
           <div className="mt-5 flex gap-3">
             {SOCIALS.map((s) => (

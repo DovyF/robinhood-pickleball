@@ -261,12 +261,9 @@ async function main() {
       settingsJson: JSON.stringify({ text: "Raw carbon faces. Poly cores. Spin for days.", ctaLabel: "Explore Paddles", ctaUrl: "/collections/paddles", image: PADDLE_IMGS[0] }),
     },
     { type: "product_grid", title: "New & Popular", position: 4, settingsJson: JSON.stringify({ source: "best-selling", limit: 8 }) },
-    { type: "testimonials", title: "Loved by 10,000+ players", position: 5, settingsJson: JSON.stringify({ items: [
-      { name: "Marcus T.", quote: "Best paddle I've owned, and half the price of the name brands.", rating: 5 },
-      { name: "Priya S.", quote: "Fast shipping and the control paddle is unreal at the net.", rating: 5 },
-      { name: "Dave L.", quote: "Got the starter set for my parents — they're obsessed now.", rating: 5 },
-    ] }) },
-    { type: "newsletter", title: "Join the merry band", position: 6, settingsJson: JSON.stringify({ subtitle: "Be first to hear about restocks and new drops." }) },
+    // No seeded testimonials — same as reviews, real quotes come from real customers.
+    // Add this section back via /admin/content once there are genuine reviews to show.
+    { type: "newsletter", title: "Join the merry band", position: 5, settingsJson: JSON.stringify({ subtitle: "Be first to hear about restocks and new drops." }) },
   ];
   for (const s of sections) {
     await prisma.homepageSection.create({ data: { type: s.type, title: s.title, position: s.position, enabled: true, settingsJson: s.settingsJson } });
