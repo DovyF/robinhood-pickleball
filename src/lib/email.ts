@@ -106,3 +106,10 @@ export async function sendContactMessage(fromEmail: string, name: string, messag
   const body = `<p><strong>${name}</strong> (${fromEmail}) wrote:</p><p>${message.replace(/\n/g, "<br>")}</p>`;
   return send(to, `New contact message from ${name}`, shell("Contact form", body));
 }
+
+export async function sendNewsletterWelcome(to: string) {
+  const body = `<p>Thanks for subscribing to ${STORE}!</p>
+    <p>You'll be the first to hear about restocks, new drops, and special offers.</p>
+    <p>In the meantime, check out <a href="https://robinhoodpickleball.com/products/the-longbow" style="color:#14532d;text-decoration:none"><strong>The Longbow</strong></a> — tournament-grade pickleball at an honest price.</p>`;
+  return send(to, `Welcome to ${STORE}`, shell("You're in! 🎾", body));
+}
