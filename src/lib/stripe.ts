@@ -2,7 +2,6 @@ import Stripe from "stripe";
 
 // Stripe server client. Initialized lazily so the app boots without a key
 // (checkout will surface a friendly error until STRIPE_SECRET_KEY is set).
-// Fully configured with production keys in Vercel environment.
 let _stripe: Stripe | null = null;
 
 export function getStripe(): Stripe {
