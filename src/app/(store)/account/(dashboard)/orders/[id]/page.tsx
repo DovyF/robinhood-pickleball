@@ -30,6 +30,10 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         <StatusBadge status={order.status} />
       </div>
 
+      {(order.status === "paid" || order.status === "fulfilled" || order.status === "partially_fulfilled") && (
+        <Link href="/returns" className="mt-3 inline-block text-sm font-semibold text-forest-700 hover:underline">Need to return something from this order? →</Link>
+      )}
+
       {order.trackingNumber && (
         <div className="mt-4 rounded-xl bg-forest-50 p-4">
           <p className="text-sm">Your order shipped via <strong>{order.shippingCarrier}</strong></p>

@@ -113,3 +113,34 @@ export async function sendNewsletterWelcome(to: string) {
     <p>In the meantime, check out <a href="https://robinhoodpickleball.com/products/the-longbow" style="color:#14532d;text-decoration:none"><strong>The Longbow</strong></a> — tournament-grade pickleball at an honest price.</p>`;
   return send(to, `Welcome to ${STORE}`, shell("You're in! 🎾", body));
 }
+
+export async function sendReturnRequestReceived(to: string, orderNumber: number) {
+  const body = `<p>We've received your return request for order <strong>#${orderNumber}</strong>.</p>
+    <p>Our team will review the photos and details you submitted, usually within 1-2 business days, and email you with a decision.</p>
+    <p>You don't need to ship anything back yet — wait for our approval email first.</p>`;
+  return send(to, `Return request received — order #${orderNumber}`, shell("We've got your request", body));
+}
+
+export async function sendReturnDecision(to: string, orderNumber: number, approved: boolean, adminNote?: string | null) {
+  const body = approved
+    ? `<p>Good news — your return request for order <strong>#${orderNumber}</strong> has been approved.</p>
+       <p>Please ship the item(s) back to us. Once we receive and inspect them, we'll process your refund to the original payment method.</p>
+       ${adminNote ? `<p style="color:#888">Note from our team: ${adminNote}</p>` : ""}`
+    : `<p>We've reviewed your return request for order <strong>#${orderNumber}</strong> and are unable to approve it.</p>
+       ${adminNote ? `<p><strong>Reason:</strong> ${adminNote}</p>` : ""}
+       <p>If you think this is a mistake, reply to this email and we'll take another look.</p>`;
+  return send(to, `Return request ${approved ? "approved" : "update"} — order #${orderNumber}`, shell(approved ? "Return approved" : "Return update", body));
+}
+
+export async function sendReturnRefunded(to: string, orderNumber: number, amount: number) {
+  const body = `<p>Your refund for order <strong>#${orderNumber}</strong> has been processed.</p>
+    <p><strong>${formatMoney(amount)}</strong> will appear on your original payment method within 5-10 business days.</p>`;
+  return send(to, `Refund processed — order #${orderNumber}`, shell("Refund processed", body));
+}
+
+export async function sendReturnRequestAlert(orderNumber: number, reason: string) {
+  const to = process.env.ADMIN_EMAIL || "admin@robinhoodpickleball.com";
+  const body = `<p>A new return request came in for order <strong>#${orderNumber}</strong>.</p><p>Reason: ${reason}</p>
+    <p><a href="https://robinhoodpickleball.com/admin/returns" style="color:#14532d">Review it in the admin panel →</a></p>`;
+  return send(to, `New return request — order #${orderNumber}`, shell("New return request", body));
+}

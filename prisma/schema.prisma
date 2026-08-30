@@ -383,6 +383,7 @@ model Order {
   items           OrderItem[]
   refunds         Refund[]
   fulfillments    Fulfillment[]
+  returnRequests  ReturnRequest[]
 
   @@index([userId])
   @@index([status])
@@ -440,6 +441,28 @@ model Refund {
   createdAt DateTime @default(now())
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   @@index([orderId])
+}
+
+model ReturnRequest {
+  id          String    @id @default(cuid())
+  orderId     String
+  email       String
+  status      String    @default("requested") // requested | approved | denied | received | refunded
+  reason      String    // damaged | defective | wrong_item | not_as_described | changed_mind | other
+  note        String?
+  itemsJson   String    // [{orderItemId, quantity}]
+  photoUrls   String?   // JSON array of uploaded photo URLs
+  adminNote   String?
+  refundId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  decidedAt   DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@index([email])
 }
 
 // ----------------------------------------------------------------------------

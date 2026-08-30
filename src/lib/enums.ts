@@ -66,3 +66,29 @@ export const AnalyticsEventType = {
   PURCHASE: "purchase",
   SEARCH: "search",
 } as const;
+
+export const ReturnStatus = {
+  REQUESTED: "requested",
+  APPROVED: "approved",
+  DENIED: "denied",
+  RECEIVED: "received",
+  REFUNDED: "refunded",
+} as const;
+
+export const ReturnReason = {
+  DAMAGED_IN_TRANSIT: "damaged",
+  DEFECTIVE: "defective",
+  WRONG_ITEM: "wrong_item",
+  NOT_AS_DESCRIBED: "not_as_described",
+  CHANGED_MIND: "changed_mind",
+  OTHER: "other",
+} as const;
+
+export const RETURN_REASON_LABELS: Record<string, string> = {
+  [ReturnReason.DAMAGED_IN_TRANSIT]: "Arrived damaged",
+  [ReturnReason.DEFECTIVE]: "Defective / manufacturing issue",
+  [ReturnReason.WRONG_ITEM]: "Received the wrong item",
+  [ReturnReason.NOT_AS_DESCRIBED]: "Not as described",
+  [ReturnReason.CHANGED_MIND]: "Changed my mind",
+  [ReturnReason.OTHER]: "Other",
+};
