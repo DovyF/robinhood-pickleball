@@ -77,9 +77,28 @@ const placeSchema = z.object({
  * secret to confirm on the client. Otherwise runs in demo mode and marks the
  * order paid immediately so the full funnel is testable without keys.
  */
+const FIELD_LABELS: Record<string, string> = {
+  email: "Email",
+  firstName: "First name",
+  lastName: "Last name",
+  line1: "Address",
+  city: "City",
+  state: "State",
+  postalCode: "ZIP code",
+  country: "Country",
+};
+
+function describeValidationError(error: z.ZodError): string {
+  const issue = error.issues[0];
+  if (!issue) return "Please check your details and try again.";
+  const field = issue.path[issue.path.length - 1];
+  const label = (typeof field === "string" && FIELD_LABELS[field]) || "One of the fields";
+  return `${label} looks invalid — please check it and try again.`;
+}
+
 export async function placeOrderAction(raw: unknown) {
   const parsed = placeSchema.safeParse(raw);
-  if (!parsed.success) return { ok: false as const, error: "Please check your details and try again." };
+  if (!parsed.success) return { ok: false as const, error: describeValidationError(parsed.error) };
   const input = parsed.data;
   const session = await auth();
 
