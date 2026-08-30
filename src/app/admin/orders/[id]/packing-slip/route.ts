@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     @media print{ .noprint{display:none} body{margin:0} }
   </style></head><body onload="window.print()">
     <div class="row">
-      <div><h1>🎾 ${store}</h1><p class="muted">Packing Slip</p></div>
+      <div><h1>${store}</h1><p class="muted">Packing Slip</p></div>
       <div style="text-align:right"><strong>Order #${order.orderNumber}</strong><br><span class="muted">${formatDate(order.createdAt)}</span></div>
     </div>
     <div class="row">

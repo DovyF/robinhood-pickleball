@@ -33,7 +33,7 @@ function shell(title: string, body: string): string {
   return `<!doctype html><html><body style="margin:0;background:#f4f4f0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a">
   <div style="max-width:560px;margin:0 auto;padding:32px 16px">
     <div style="text-align:center;padding:8px 0 24px">
-      <span style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#14532d">🎾 ${STORE}</span>
+      <span style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#14532d">${STORE}</span>
     </div>
     <div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
       <h1 style="font-size:20px;margin:0 0 16px">${title}</h1>
@@ -98,7 +98,7 @@ export async function sendAbandonedCart(to: string, recoverUrl: string, discount
   const body = `<p>You left some gear in your cart! Complete your order before it's gone.</p>
     ${discountCode ? `<p>Use code <strong>${discountCode}</strong> at checkout.</p>` : ""}
     <p><a href="${recoverUrl}" style="display:inline-block;background:#14532d;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none">Return to cart</a></p>`;
-  return send(to, "You left something behind 🎾", shell("Still thinking it over?", body));
+  return send(to, "You left something behind", shell("Still thinking it over?", body));
 }
 
 export async function sendContactMessage(fromEmail: string, name: string, message: string) {
@@ -111,7 +111,7 @@ export async function sendNewsletterWelcome(to: string) {
   const body = `<p>Thanks for subscribing to ${STORE}!</p>
     <p>You'll be the first to hear about restocks, new drops, and special offers.</p>
     <p>In the meantime, check out <a href="https://robinhoodpickleball.com/products/the-longbow" style="color:#14532d;text-decoration:none"><strong>The Longbow</strong></a> — tournament-grade pickleball at an honest price.</p>`;
-  return send(to, `Welcome to ${STORE}`, shell("You're in! 🎾", body));
+  return send(to, `Welcome to ${STORE}`, shell("You're in!", body));
 }
 
 export async function sendReturnRequestReceived(to: string, orderNumber: number) {
