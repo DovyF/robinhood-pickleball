@@ -3,9 +3,11 @@ import path from "path";
 import { nanoid } from "nanoid";
 
 /**
- * Persist an uploaded image. Uses Cloudinary when configured, otherwise saves
- * to /public/uploads (works out of the box locally; on Vercel switch to
- * Cloudinary or Vercel Blob by setting the env vars).
+ * Persist an uploaded image. Uses Cloudinary when configured, then Vercel
+ * Blob when configured, otherwise saves to /public/uploads. The local-disk
+ * fallback only works in dev — Vercel's production filesystem is read-only,
+ * so at least one of Cloudinary or Blob must be configured to accept uploads
+ * (e.g. return-request photos) in production.
  */
 export async function saveImage(file: File): Promise<{ url: string; width?: number; height?: number }> {
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -14,12 +16,23 @@ export async function saveImage(file: File): Promise<{ url: string; width?: numb
     return uploadToCloudinary(buffer, file.type);
   }
 
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    return uploadToVercelBlob(buffer, file.name, file.type);
+  }
+
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
   const name = `${nanoid(16)}.${ext}`;
   const dir = path.join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), buffer);
   return { url: `/uploads/${name}` };
+}
+
+async function uploadToVercelBlob(buffer: Buffer, filename: string, mime: string): Promise<{ url: string }> {
+  const { put } = await import("@vercel/blob");
+  const ext = (filename.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const blob = await put(`${nanoid(16)}.${ext}`, buffer, { access: "public", contentType: mime, addRandomSuffix: false });
+  return { url: blob.url };
 }
 
 async function uploadToCloudinary(buffer: Buffer, mime: string): Promise<{ url: string; width?: number; height?: number }> {
