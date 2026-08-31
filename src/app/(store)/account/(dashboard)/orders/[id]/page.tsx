@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatMoney, formatDate, safeJson } from "@/lib/utils";
+import { discountLabel } from "@/lib/orders";
+import { taxRateForState } from "@/lib/tax";
 import type { CheckoutAddress } from "@/lib/orders";
 import { StatusBadge } from "@/components/account/StatusBadge";
 
@@ -18,6 +20,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   if (!order) notFound();
 
   const ship = safeJson<CheckoutAddress | null>(order.shippingAddressJson, null);
+  const discount = order.discountCode ? await prisma.discountCode.findUnique({ where: { code: order.discountCode }, select: { type: true, value: true } }) : null;
+  const taxRate = taxRateForState(ship?.state);
 
   return (
     <div>
@@ -52,17 +56,17 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               <div className="flex-1 text-sm">
                 <p className="font-medium">{i.title}</p>
                 {i.variantTitle && <p className="text-ink-soft">{i.variantTitle}</p>}
-                <p className="text-ink-soft">Qty {i.quantity}</p>
+                <p className="text-ink-soft">{formatMoney(i.price)} × {i.quantity}</p>
               </div>
               <span className="font-semibold">{formatMoney(i.total)}</span>
             </li>
           ))}
         </ul>
         <dl className="mt-4 space-y-2 border-t border-cream-dark pt-4 text-sm">
-          <div className="flex justify-between"><dt className="text-ink-soft">Subtotal</dt><dd>{formatMoney(order.subtotal)}</dd></div>
-          {order.discountTotal > 0 && <div className="flex justify-between text-forest-600"><dt>Discount</dt><dd>−{formatMoney(order.discountTotal)}</dd></div>}
-          <div className="flex justify-between"><dt className="text-ink-soft">Shipping</dt><dd>{order.shippingTotal === 0 ? "Free" : formatMoney(order.shippingTotal)}</dd></div>
-          <div className="flex justify-between"><dt className="text-ink-soft">Tax</dt><dd>{formatMoney(order.taxTotal)}</dd></div>
+          <div className="flex justify-between"><dt className="text-ink-soft">Subtotal ({order.items.reduce((n, i) => n + i.quantity, 0)} item{order.items.reduce((n, i) => n + i.quantity, 0) !== 1 ? "s" : ""})</dt><dd>{formatMoney(order.subtotal)}</dd></div>
+          {order.discountTotal > 0 && <div className="flex justify-between text-forest-600"><dt>{discountLabel(order.discountCode, discount)}</dt><dd>−{formatMoney(order.discountTotal)}</dd></div>}
+          <div className="flex justify-between"><dt className="text-ink-soft">Shipping{order.shippingMethod ? ` — ${order.shippingMethod}` : ""}</dt><dd>{order.shippingTotal === 0 ? "Free" : formatMoney(order.shippingTotal)}</dd></div>
+          <div className="flex justify-between"><dt className="text-ink-soft">Tax{ship?.state ? ` (${ship.state}${taxRate > 0 ? ` · ${(taxRate * 100).toFixed(2)}%` : ""})` : ""}</dt><dd>{formatMoney(order.taxTotal)}</dd></div>
           <div className="flex justify-between border-t border-cream-dark pt-2 text-base font-bold"><dt>Total</dt><dd>{formatMoney(order.total)}</dd></div>
           {order.refundedTotal > 0 && <div className="flex justify-between text-red-600"><dt>Refunded</dt><dd>−{formatMoney(order.refundedTotal)}</dd></div>}
         </dl>

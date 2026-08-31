@@ -208,3 +208,11 @@ export async function markOrderPaid(orderId: string, paymentIntentId?: string, c
 }
 
 export { DiscountType };
+
+/** Human-readable label for a discount line on an order — e.g. "Discount — 10% off (SUMMER10)". */
+export function discountLabel(code: string | null | undefined, discount: { type: string; value: number } | null): string {
+  if (!code) return "Discount";
+  if (!discount) return `Discount (${code})`;
+  const desc = discount.type === DiscountType.PERCENTAGE ? `${discount.value}% off` : discount.type === DiscountType.FIXED_AMOUNT ? `$${discount.value.toFixed(2)} off` : "Free shipping";
+  return `Discount — ${desc} (${code})`;
+}
