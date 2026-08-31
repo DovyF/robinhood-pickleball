@@ -5,115 +5,73 @@ import { assertStaff, logAudit } from "@/lib/admin-auth";
 import { safeJson } from "@/lib/utils";
 import type { CheckoutAddress } from "@/lib/orders";
 
-const PIRATESHIP_API = "https://api.pirateship.com";
-const PIRATESHIP_KEY = process.env.PIRATESHIP_API_KEY;
-
-interface PirateShipLabel {
-  label_id: string;
-  label_download: {
-    pdf: string;
-    zpl: string;
-  };
-  tracking_number: string;
-  carrier: string;
-}
+const GRAMS_PER_OZ = 28.3495;
 
 interface Order {
   id: string;
   orderNumber: number;
   email: string;
+  phone?: string | null;
   total: number;
-  shippingMethod?: string | null;
   shippingAddressJson: string;
-  items: Array<{ title: string; quantity: number }>;
+  items: Array<{ title: string; quantity: number; productId?: string | null; variantId?: string | null }>;
 }
 
-/** Generate PirateShip labels for selected orders */
-export async function generatePirateShipLabel(orders: Order[]) {
-  try {
-    await assertStaff();
+function csvCell(value: string | number): string {
+  const s = String(value);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
-    if (!PIRATESHIP_KEY) {
-      return { ok: false, error: "PirateShip API key not configured" };
-    }
+/**
+ * Pirate Ship has no public API (confirmed via their own support docs:
+ * "Pirate Ship doesn't offer an API") — their supported bulk workflow is a
+ * flexible spreadsheet upload with labeled columns. This builds a CSV in
+ * that format for the admin to import at pirateship.com/orders.
+ */
+export async function exportOrdersForPirateShip(orders: Order[]) {
+  await assertStaff();
 
-    const labels: PirateShipLabel[] = [];
+  const productIds = [...new Set(orders.flatMap((o) => o.items.map((i) => i.productId).filter(Boolean)))] as string[];
+  const variantIds = [...new Set(orders.flatMap((o) => o.items.map((i) => i.variantId).filter(Boolean)))] as string[];
+  const [products, variants] = await Promise.all([
+    productIds.length ? prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, weightGrams: true } }) : [],
+    variantIds.length ? prisma.productVariant.findMany({ where: { id: { in: variantIds } }, select: { id: true, weightGrams: true } }) : [],
+  ]);
+  const productWeight = new Map(products.map((p) => [p.id, p.weightGrams]));
+  const variantWeight = new Map(variants.map((v) => [v.id, v.weightGrams]));
 
-    for (const order of orders) {
-      const ship = safeJson<CheckoutAddress | null>(
-        order.shippingAddressJson,
-        null
-      );
+  const header = ["Order Number", "Full Name", "Address Line 1", "Address Line 2", "City", "State", "Zip", "Country", "Email", "Phone", "Weight (oz)", "Order Value", "Contents"];
+  const rows = [header];
 
-      if (!ship) {
-        console.warn(`Order ${order.id} has no shipping address`);
-        continue;
-      }
+  for (const order of orders) {
+    const ship = safeJson<CheckoutAddress | null>(order.shippingAddressJson, null);
+    if (!ship) continue;
 
-      // Call PirateShip API to create label
-      const labelRes = await fetch(`${PIRATESHIP_API}/labels/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Pirateship-API-Key": PIRATESHIP_KEY,
-        },
-        body: JSON.stringify({
-          carrier: "USPS", // Default; could be made configurable
-          service_code: "usps_priority_mail",
-          label_format: "pdf",
-          to_address: {
-            name: `${ship.firstName} ${ship.lastName}`,
-            street1: ship.line1,
-            street2: ship.line2 || "",
-            city: ship.city,
-            state: ship.state,
-            zip: ship.postalCode,
-            country: ship.country || "US",
-          },
-          from_address: {
-            name: "Robinhood Pickleball",
-            street1: process.env.SHIPFROM_STREET || "1 Robinhood Lane",
-            city: process.env.SHIPFROM_CITY || "Austin",
-            state: process.env.SHIPFROM_STATE || "TX",
-            zip: process.env.SHIPFROM_ZIP || "78701",
-            country: "US",
-          },
-          parcel: {
-            length: 12,
-            width: 9,
-            height: 4,
-            weight: 2, // Paddle approximate weight
-          },
-          order_number: `RP-${order.orderNumber}`,
-          contents: order.items.map((i) => i.title).join(", "),
-        }),
-      });
+    const gramsTotal = order.items.reduce((sum, i) => {
+      const grams = (i.variantId && variantWeight.get(i.variantId)) || (i.productId && productWeight.get(i.productId)) || 0;
+      return sum + grams * i.quantity;
+    }, 0);
+    const oz = gramsTotal > 0 ? (gramsTotal / GRAMS_PER_OZ).toFixed(1) : "";
 
-      if (!labelRes.ok) {
-        console.error("PirateShip API error:", await labelRes.text());
-        continue;
-      }
-
-      const label = (await labelRes.json()) as PirateShipLabel;
-      labels.push(label);
-
-      // Update order with tracking info
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          trackingNumber: label.tracking_number,
-          shippingCarrier: label.carrier,
-        },
-      });
-
-      await logAudit("generate_label", "order", order.id, label.tracking_number);
-    }
-
-    return { ok: true, labels, count: labels.length };
-  } catch (err) {
-    console.error("Label generation error:", err);
-    return { ok: false, error: "Failed to generate labels" };
+    rows.push([
+      `RP-${order.orderNumber}`,
+      `${ship.firstName} ${ship.lastName}`,
+      ship.line1,
+      ship.line2 || "",
+      ship.city,
+      ship.state,
+      ship.postalCode,
+      ship.country || "US",
+      order.email,
+      order.phone || ship.phone || "",
+      oz,
+      order.total.toFixed(2),
+      order.items.map((i) => `${i.quantity}x ${i.title}`).join("; "),
+    ].map(csvCell));
   }
+
+  await logAudit("export_pirateship_csv", "order", undefined, `${orders.length} orders`);
+  return { ok: true, csv: rows.map((r) => r.join(",")).join("\n") };
 }
 
 /** Mark orders as fulfilled */
