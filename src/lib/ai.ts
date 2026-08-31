@@ -1,6 +1,5 @@
-// Thin wrapper around the Gemini API (Google AI Studio) — chosen because it has a
-// genuinely free tier (no credit card required) that's generous enough for a
-// small store's support chat volume. Swap GEMINI_MODEL if the key's tier changes.
+// Thin wrapper around the Groq API — free tier, OpenAI-compatible, same
+// provider already used for the Synked support agent.
 
 export interface ChatTurn {
   role: "user" | "assistant";
@@ -14,48 +13,35 @@ export interface SupportAiResult {
 }
 
 export function aiConfigured(): boolean {
-  return !!process.env.GEMINI_API_KEY;
+  return !!process.env.GROQ_API_KEY;
 }
 
 export async function askSupportAI(systemPrompt: string, history: ChatTurn[]): Promise<SupportAiResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
+  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
-  const contents = history.map((h) => ({
-    role: h.role === "assistant" ? "model" : "user",
-    parts: [{ text: h.content }],
-  }));
-
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            reply: { type: "STRING" },
-            escalate: { type: "BOOLEAN" },
-            reason: { type: "STRING" },
-          },
-          required: ["reply", "escalate"],
-        },
-        temperature: 0.3,
-      },
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...history.map((h) => ({ role: h.role, content: h.content })),
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
     }),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Gemini API error ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`Groq API error ${res.status}: ${text.slice(0, 300)}`);
   }
 
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error("Empty response from AI");
 
   const parsed = JSON.parse(text) as SupportAiResult;
