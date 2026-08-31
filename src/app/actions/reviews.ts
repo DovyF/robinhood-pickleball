@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sendNewReviewAlert } from "@/lib/email";
 
 const schema = z.object({
   productId: z.string(),
@@ -44,6 +45,18 @@ export async function submitReviewAction(input: unknown) {
 
   await recomputeProductRating(data.productId);
   revalidatePath(`/products/${data.slug}`);
+
+  const product = await prisma.product.findUnique({ where: { id: data.productId }, select: { title: true } });
+  sendNewReviewAlert({
+    productTitle: product?.title ?? "a product",
+    rating: data.rating,
+    title: data.title,
+    body: data.body,
+    authorName: data.authorName,
+    authorEmail: data.authorEmail,
+    verified: !!purchased,
+  }).catch(() => {});
+
   return { ok: true };
 }
 

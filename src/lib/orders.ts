@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { computeTotals, type DiscountLike } from "@/lib/pricing";
 import { DiscountType, OrderStatus, PaymentStatus, FulfillmentStatus } from "@/lib/enums";
-import { sendOrderConfirmation } from "@/lib/email";
+import { sendOrderConfirmation, sendNewOrderAlert } from "@/lib/email";
 
 const ORDER_START = 1001;
 
@@ -190,9 +190,9 @@ export async function markOrderPaid(orderId: string, paymentIntentId?: string, c
     await tx.cart.updateMany({ where: { userId: order.userId ?? undefined, status: "active" }, data: { status: "converted" } });
   });
 
-  // Send confirmation (outside tx)
+  // Send confirmation + owner alert (outside tx)
   const ship = order.shippingAddressJson ? (JSON.parse(order.shippingAddressJson) as CheckoutAddress) : null;
-  await sendOrderConfirmation({
+  const emailData = {
     orderNumber: order.orderNumber,
     email: order.email,
     items: order.items.map((i) => ({ title: i.title, variantTitle: i.variantTitle, quantity: i.quantity, total: i.total })),
@@ -202,7 +202,9 @@ export async function markOrderPaid(orderId: string, paymentIntentId?: string, c
     discountTotal: order.discountTotal,
     total: order.total,
     shippingAddress: ship ? { line1: ship.line1, city: ship.city, state: ship.state, postalCode: ship.postalCode } : null,
-  }).catch(() => {});
+  };
+  await sendOrderConfirmation(emailData).catch(() => {});
+  await sendNewOrderAlert({ ...emailData, phone: order.phone, shippingMethod: order.shippingMethod }).catch(() => {});
 }
 
 export { DiscountType };

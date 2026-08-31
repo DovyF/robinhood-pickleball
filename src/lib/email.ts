@@ -74,6 +74,50 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
   return send(data.email, `Order #${data.orderNumber} confirmed`, shell("Order confirmed 🎉", body));
 }
 
+interface NewOrderAlertData extends OrderEmailData {
+  phone?: string | null;
+  shippingMethod?: string | null;
+}
+
+export async function sendNewOrderAlert(data: NewOrderAlertData) {
+  const to = process.env.ADMIN_EMAIL || "admin@robinhoodpickleball.com";
+  const rows = data.items
+    .map(
+      (i) => `<tr>
+      <td style="padding:8px 0;border-bottom:1px solid #eee">${i.title}${i.variantTitle ? ` <span style="color:#888">(${i.variantTitle})</span>` : ""} × ${i.quantity}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">${formatMoney(i.total)}</td></tr>`
+    )
+    .join("");
+  const addr = data.shippingAddress;
+  const body = `
+    <p>You've got a new order 💰</p>
+    <p style="color:#888;margin:0 0 16px">Order <strong>#${data.orderNumber}</strong> · ${data.email}${data.phone ? ` · ${data.phone}` : ""}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>
+    <table style="width:100%;margin-top:16px;font-size:14px">
+      <tr><td>Subtotal</td><td style="text-align:right">${formatMoney(data.subtotal)}</td></tr>
+      ${data.discountTotal ? `<tr><td>Discount</td><td style="text-align:right;color:#16a34a">−${formatMoney(data.discountTotal)}</td></tr>` : ""}
+      <tr><td>Shipping${data.shippingMethod ? ` (${data.shippingMethod})` : ""}</td><td style="text-align:right">${data.shippingTotal ? formatMoney(data.shippingTotal) : "Free"}</td></tr>
+      <tr><td>Tax</td><td style="text-align:right">${formatMoney(data.taxTotal)}</td></tr>
+      <tr><td style="padding-top:8px;font-weight:700">Total</td><td style="padding-top:8px;text-align:right;font-weight:700">${formatMoney(data.total)}</td></tr>
+    </table>
+    ${addr ? `<p style="margin-top:16px"><strong>Ship to:</strong><br>${addr.line1}<br>${addr.city}, ${addr.state} ${addr.postalCode}</p>` : ""}
+    <p style="margin-top:20px"><a href="https://robinhoodpickleball.com/admin/orders" style="color:#14532d">View in admin panel →</a></p>`;
+  return send(to, `New order #${data.orderNumber} — ${formatMoney(data.total)}`, shell("New order", body));
+}
+
+export async function sendNewReviewAlert(data: { productTitle: string; rating: number; title?: string | null; body: string; authorName: string; authorEmail?: string | null; verified: boolean }) {
+  const to = process.env.ADMIN_EMAIL || "admin@robinhoodpickleball.com";
+  const stars = "★".repeat(data.rating) + "☆".repeat(5 - data.rating);
+  const body = `
+    <p>A new review just came in for <strong>${data.productTitle}</strong>.</p>
+    <p style="font-size:18px;color:#eab308;margin:8px 0">${stars}</p>
+    ${data.title ? `<p style="font-weight:700;margin:0 0 4px">${data.title}</p>` : ""}
+    <p style="color:#333">${data.body.replace(/\n/g, "<br>")}</p>
+    <p style="margin-top:16px;color:#888;font-size:13px">— ${data.authorName}${data.authorEmail ? ` (${data.authorEmail})` : ""}${data.verified ? " · Verified buyer" : ""}</p>
+    <p style="margin-top:16px"><a href="https://robinhoodpickleball.com/products/the-longbow" style="color:#14532d">View on the product page →</a></p>`;
+  return send(to, `New ${data.rating}★ review — ${data.productTitle}`, shell("New review", body));
+}
+
 export async function sendShippingNotification(to: string, orderNumber: number, carrier: string, trackingNumber: string, trackingUrl?: string) {
   const body = `<p>Good news — your order <strong>#${orderNumber}</strong> is on its way!</p>
     <p>Carrier: <strong>${carrier}</strong><br>Tracking: <strong>${trackingNumber}</strong></p>
