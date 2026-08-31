@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 /**
  * Renders the store chrome (announcement, header, footer, cart drawer) on every
@@ -29,6 +30,7 @@ export function ChromeGate({
       <main className="flex-1">{children}</main>
       {!bare && footer}
       {!bare && cartProvider}
+      {!bare && <ChatWidget />}
     </>
   );
 }

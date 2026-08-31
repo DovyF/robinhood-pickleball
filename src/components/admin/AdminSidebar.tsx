@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingCart, Package, FolderTree, Users, Tag, BarChart3, FileText, Settings, ScrollText, Gift, Truck, RotateCcw } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, FolderTree, Users, Tag, BarChart3, FileText, Settings, ScrollText, Gift, Truck, RotateCcw, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROLES } from "@/lib/enums";
@@ -20,6 +20,7 @@ const groups: { title: string; items: { href: string; label: string; icon: typeo
     items: [
       { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
       { href: "/admin/returns", label: "Returns", icon: RotateCcw },
+      { href: "/admin/tickets", label: "Support Tickets", icon: MessageCircle },
       { href: "/admin/fulfillment", label: "Fulfillment", icon: Truck },
       { href: "/admin/products", label: "Products", icon: Package },
       { href: "/admin/collections", label: "Collections", icon: FolderTree },

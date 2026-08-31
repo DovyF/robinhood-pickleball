@@ -84,6 +84,11 @@ export const ReturnReason = {
   OTHER: "other",
 } as const;
 
+export const TicketStatus = {
+  OPEN: "open",
+  RESOLVED: "resolved",
+} as const;
+
 export const RETURN_REASON_LABELS: Record<string, string> = {
   [ReturnReason.DAMAGED_IN_TRANSIT]: "Arrived damaged",
   [ReturnReason.DEFECTIVE]: "Defective / manufacturing issue",

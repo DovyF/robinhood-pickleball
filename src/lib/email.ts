@@ -14,14 +14,14 @@ function client(): Resend | null {
   return _resend;
 }
 
-async function send(to: string, subject: string, html: string) {
+async function send(to: string, subject: string, html: string, replyTo?: string) {
   const c = client();
   if (!c) {
     console.info(`[email:noop] To:${to} Subject:${subject}`);
     return { ok: false, skipped: true };
   }
   try {
-    await c.emails.send({ from: FROM, to, subject, html });
+    await c.emails.send({ from: FROM, to, subject, html, ...(replyTo ? { replyTo } : {}) });
     return { ok: true };
   } catch (e) {
     console.error("[email:error]", (e as Error).message);
@@ -143,4 +143,24 @@ export async function sendReturnRequestAlert(orderNumber: number, reason: string
   const body = `<p>A new return request came in for order <strong>#${orderNumber}</strong>.</p><p>Reason: ${reason}</p>
     <p><a href="https://robinhoodpickleball.com/admin/returns" style="color:#14532d">Review it in the admin panel →</a></p>`;
   return send(to, `New return request — order #${orderNumber}`, shell("New return request", body));
+}
+
+interface TicketChatTurn { role: "user" | "assistant"; content: string; }
+
+export async function sendSupportTicketAlert(ticketId: string, customerEmail: string, subject: string, messages: TicketChatTurn[]) {
+  const to = process.env.ADMIN_EMAIL || "admin@robinhoodpickleball.com";
+  const transcript = messages
+    .map((m) => `<p style="margin:4px 0"><strong>${m.role === "user" ? "Customer" : "Assistant"}:</strong> ${m.content.replace(/</g, "&lt;")}</p>`)
+    .join("");
+  const body = `<p>The AI assistant couldn't fully resolve a customer question and escalated it to you.</p>
+    <p><strong>From:</strong> ${customerEmail}</p>
+    <p><strong>Subject:</strong> ${subject}</p>
+    <div style="margin-top:16px;padding:12px;background:#f4f4f0;border-radius:8px">${transcript}</div>
+    <p style="margin-top:16px;color:#888;font-size:13px">Just hit reply on this email — it'll go straight to the customer at ${customerEmail}.</p>`;
+  return send(to, `Support ticket: ${subject}`, shell("New support ticket", body), customerEmail);
+}
+
+export async function sendSupportTicketConfirmation(to: string) {
+  const body = `<p>Thanks for reaching out! We've received your message and a member of our team will follow up with you at this email address shortly, usually within 1 business day.</p>`;
+  return send(to, "We've got your message — Robinhood Pickleball", shell("We'll be in touch", body));
 }

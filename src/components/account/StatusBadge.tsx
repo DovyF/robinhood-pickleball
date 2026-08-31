@@ -12,6 +12,8 @@ const STYLES: Record<string, string> = {
   approved: "bg-forest-100 text-forest-700",
   denied: "bg-red-100 text-red-700",
   received: "bg-blue-100 text-blue-700",
+  open: "bg-amber-100 text-amber-800",
+  resolved: "bg-forest-100 text-forest-700",
   active: "bg-forest-100 text-forest-700",
   draft: "bg-gray-200 text-gray-600",
   archived: "bg-gray-200 text-gray-600",
