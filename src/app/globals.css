@@ -32,6 +32,7 @@
   --color-panel-2: #0d0d0d;      /* alt section background */
   --color-ink: #fafafa;          /* primary text */
   --color-ink-soft: #a6a6a6;     /* muted text */
+  --color-ink-on-light: #18181b; /* text color on white/light surfaces (tables, modals) */
   --color-lime: #b6f858;         /* bright hover accent */
 
   /* Semantic */
@@ -70,6 +71,14 @@
   ::selection {
     background: var(--color-forest-700);
     color: #0a0a0a;
+  }
+  /* The site's default text color (--color-ink) is near-white for the dark
+     theme. Any white/light surface (admin tables, modals) needs to override
+     that back to dark text, or content on it is nearly invisible. Utility
+     color classes (text-ink-soft, text-forest-700, etc.) still win since
+     Tailwind utilities are a higher-precedence layer than this one. */
+  .bg-white {
+    color: var(--color-ink-on-light);
   }
 }
 

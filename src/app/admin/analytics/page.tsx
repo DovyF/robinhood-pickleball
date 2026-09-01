@@ -28,7 +28,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     <div>
       <PageHeader title="Analytics" subtitle="Store performance" action={<DateRangePicker current={rangeParam ?? "30d"} />} />
 
-      <Link href={`/admin/analytics/sessions?range=${rangeParam ?? "30d"}`} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
+      <Link href="/admin/analytics/sessions" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
         View every session with timestamps, device, and full timeline <ArrowRight size={14} />
       </Link>
 

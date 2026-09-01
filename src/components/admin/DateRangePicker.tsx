@@ -8,6 +8,7 @@ const RANGES = [
   { value: "30d", label: "30 days" },
   { value: "90d", label: "90 days" },
   { value: "12m", label: "12 months" },
+  { value: "all", label: "All time" },
 ];
 
 export function DateRangePicker({ current }: { current: string }) {

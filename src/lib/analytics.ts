@@ -9,6 +9,7 @@ export interface DateRange {
 
 export function rangeFromParam(param?: string): DateRange {
   const to = new Date();
+  if (param === "all") return { from: new Date("2020-01-01"), to };
   const days = param === "7d" ? 7 : param === "90d" ? 90 : param === "12m" ? 365 : 30;
   return { from: startOfDay(subDays(to, days - 1)), to };
 }
