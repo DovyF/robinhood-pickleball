@@ -14,6 +14,16 @@ export function rangeFromParam(param?: string): DateRange {
   return { from: startOfDay(subDays(to, days - 1)), to };
 }
 
+/** Distinct visitor sessions in range (page_view events grouped by sessionId) — the correct
+ * denominator for conversion rate and the funnel's "Sessions" stage. Not a raw event count. */
+export async function countDistinctSessions(range: DateRange): Promise<number> {
+  const rows = await prisma.analyticsEvent.groupBy({
+    by: ["sessionId"],
+    where: { type: "page_view", createdAt: { gte: range.from, lte: range.to }, sessionId: { not: null } },
+  });
+  return rows.length;
+}
+
 /** Core KPIs for the admin dashboard within a date range. */
 export async function getDashboardMetrics(range: DateRange) {
   const paidWhere = { paymentStatus: "paid", paidAt: { gte: range.from, lte: range.to } };
@@ -24,7 +34,7 @@ export async function getDashboardMetrics(range: DateRange) {
       where: { paymentStatus: "paid", paidAt: { gte: subDays(range.from, dayspan(range)), lt: range.from } },
       select: { total: true },
     }),
-    prisma.analyticsEvent.count({ where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } } }),
+    countDistinctSessions(range),
     prisma.analyticsEvent.count({ where: { type: "begin_checkout", createdAt: { gte: range.from, lte: range.to } } }),
     prisma.user.count({ where: { role: "customer", createdAt: { gte: range.from, lte: range.to } } }),
     prisma.order.groupBy({ by: ["userId"], where: paidWhere, _count: true }),
@@ -103,15 +113,15 @@ export async function getTrafficSources(range: DateRange) {
 }
 
 export async function getFunnel(range: DateRange) {
-  const [views, productViews, addToCart, checkout, purchase] = await Promise.all([
-    prisma.analyticsEvent.count({ where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } } }),
+  const [sessions, productViews, addToCart, checkout, purchase] = await Promise.all([
+    countDistinctSessions(range),
     prisma.analyticsEvent.count({ where: { type: "product_view", createdAt: { gte: range.from, lte: range.to } } }),
     prisma.analyticsEvent.count({ where: { type: "add_to_cart", createdAt: { gte: range.from, lte: range.to } } }),
     prisma.analyticsEvent.count({ where: { type: "begin_checkout", createdAt: { gte: range.from, lte: range.to } } }),
     prisma.analyticsEvent.count({ where: { type: "purchase", createdAt: { gte: range.from, lte: range.to } } }),
   ]);
   return [
-    { stage: "Sessions", count: views },
+    { stage: "Sessions", count: sessions },
     { stage: "Product views", count: productViews },
     { stage: "Added to cart", count: addToCart },
     { stage: "Reached checkout", count: checkout },
