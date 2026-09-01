@@ -5,15 +5,21 @@ import Image from "next/image";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "./ui";
 import { formatMoney, formatDate, safeJson } from "@/lib/utils";
-import { Download, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Download, Loader2, CheckCircle2, AlertCircle, Truck } from "lucide-react";
 import type { CheckoutAddress } from "@/lib/orders";
-import { exportOrdersForPirateShip, fulfillOrdersAction } from "@/app/actions/admin/fulfillment";
+import { exportOrdersForPirateShip } from "@/app/actions/admin/fulfillment";
+import { fulfillOrderAction } from "@/app/actions/admin/orders";
+
+interface TrackingRow { carrier: string; tracking: string; }
 
 export function FulfillmentQueue({ orders }: { orders: any[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [success, setSuccess] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [rows, setRows] = useState<Record<string, TrackingRow>>({});
+  const [notify, setNotify] = useState(true);
 
   const toggleOrder = (id: string) => {
     const newSelected = new Set(selected);
@@ -61,36 +67,43 @@ export function FulfillmentQueue({ orders }: { orders: any[] }) {
     }
   };
 
-  const fulfillSelected = async () => {
+  const openFulfillModal = () => {
     if (selected.size === 0) {
       setMsg("Select orders to fulfill");
       return;
     }
+    setMsg("");
+    setRows(Object.fromEntries(Array.from(selected).map((id) => [id, { carrier: "USPS", tracking: "" }])));
+    setModalOpen(true);
+  };
 
+  const submitFulfillment = async () => {
     setLoading(true);
     setMsg("");
-
-    try {
-      const result = await fulfillOrdersAction(Array.from(selected));
-      if (result.ok) {
-        setSuccess(true);
-        setMsg(`✓ Fulfilled ${result.count} orders`);
-        setSelected(new Set());
-      } else {
-        setMsg(result.error || "Failed to fulfill orders");
-      }
-    } catch (err) {
-      setMsg("Error fulfilling orders");
-    } finally {
-      setLoading(false);
+    const ids = Array.from(selected);
+    const results = await Promise.all(
+      ids.map((id) => fulfillOrderAction({ orderId: id, carrier: rows[id].carrier, trackingNumber: rows[id].tracking, notify }))
+    );
+    const failed = results.filter((r) => !r.ok).length;
+    setLoading(false);
+    setModalOpen(false);
+    if (failed === 0) {
+      setSuccess(true);
+      setMsg(`✓ Fulfilled ${ids.length} order${ids.length !== 1 ? "s" : ""}${notify ? " and notified customers" : ""}`);
+      setSelected(new Set());
+    } else {
+      setSuccess(false);
+      setMsg(`${ids.length - failed} fulfilled, ${failed} failed — check those orders individually`);
     }
   };
+
+  const selectedOrders = orders.filter((o) => selected.has(o.id));
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-ink-soft">
         Pirate Ship doesn't offer an API, so labels can't be bought automatically — select orders below, export a CSV, then upload it at{" "}
-        <a href="https://ship.pirateship.com/orders/import" target="_blank" rel="noreferrer" className="text-forest-700 hover:underline">pirateship.com</a> to buy discounted USPS/UPS labels in bulk. Once shipped, come back and use each order's &quot;Fulfill &amp; ship&quot; action to log the tracking number.
+        <a href="https://ship.pirateship.com/orders/import" target="_blank" rel="noreferrer" className="text-forest-700 hover:underline">pirateship.com</a> to buy discounted USPS/UPS labels in bulk. Once you have tracking numbers, come back and mark them fulfilled below.
       </p>
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -125,20 +138,49 @@ export function FulfillmentQueue({ orders }: { orders: any[] }) {
               Export for Pirate Ship
             </button>
             <button
-              onClick={fulfillSelected}
+              onClick={openFulfillModal}
               disabled={selected.size === 0 || loading}
               className="btn btn-outline text-sm disabled:opacity-50"
             >
-              {loading ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <CheckCircle2 size={16} />
-              )}
-              Mark Fulfilled
+              <Truck size={16} />
+              Fulfill & ship
             </button>
           </div>
         </div>
       </Card>
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4" onClick={() => !loading && setModalOpen(false)}>
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lift" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 text-lg font-bold">Fulfill {selectedOrders.length} order{selectedOrders.length !== 1 ? "s" : ""}</h3>
+            <p className="mb-4 text-sm text-ink-soft">Enter the tracking number Pirate Ship gave you for each order.</p>
+            <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
+              {selectedOrders.map((o) => (
+                <div key={o.id} className="grid grid-cols-[70px_1fr_1.4fr] gap-2 items-center">
+                  <span className="text-sm font-medium text-ink">#{o.orderNumber}</span>
+                  <select
+                    value={rows[o.id]?.carrier ?? "USPS"}
+                    onChange={(e) => setRows((r) => ({ ...r, [o.id]: { ...r[o.id], carrier: e.target.value } }))}
+                    className="input !py-1.5 text-sm"
+                  >
+                    <option>USPS</option><option>UPS</option><option>FedEx</option>
+                  </select>
+                  <input
+                    value={rows[o.id]?.tracking ?? ""}
+                    onChange={(e) => setRows((r) => ({ ...r, [o.id]: { ...r[o.id], tracking: e.target.value } }))}
+                    placeholder="Tracking number"
+                    className="input !py-1.5 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-forest-700" /> Email customers their shipping notification</label>
+            <button onClick={submitFulfillment} disabled={loading} className="btn btn-primary mt-4 w-full">
+              {loading ? <Loader2 className="animate-spin" size={16} /> : `Mark ${selectedOrders.length} fulfilled`}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {orders.map((order) => {

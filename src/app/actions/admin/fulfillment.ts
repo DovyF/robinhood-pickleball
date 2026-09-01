@@ -73,24 +73,3 @@ export async function exportOrdersForPirateShip(orders: Order[]) {
   await logAudit("export_pirateship_csv", "order", undefined, `${orders.length} orders`);
   return { ok: true, csv: rows.map((r) => r.join(",")).join("\n") };
 }
-
-/** Mark orders as fulfilled */
-export async function fulfillOrdersAction(orderIds: string[]) {
-  try {
-    await assertStaff();
-
-    const result = await prisma.order.updateMany({
-      where: { id: { in: orderIds } },
-      data: { fulfillmentStatus: "fulfilled" },
-    });
-
-    for (const id of orderIds) {
-      await logAudit("fulfill_order", "order", id);
-    }
-
-    return { ok: true, count: result.count };
-  } catch (err) {
-    console.error("Fulfillment error:", err);
-    return { ok: false, error: "Failed to fulfill orders" };
-  }
-}
