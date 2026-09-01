@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Truck, RotateCcw, Loader2, Printer, XCircle, CheckCircle2 } from "lucide-react";
-import { fulfillOrderAction, refundOrderAction, updateTrackingAction, cancelOrderAction, markPaidManuallyAction } from "@/app/actions/admin/orders";
+import { fulfillOrderAction, refundOrderAction, cancelOrderAction, markPaidManuallyAction } from "@/app/actions/admin/orders";
 import { formatMoney } from "@/lib/utils";
 
 export function OrderActions({ order }: { order: { id: string; orderNumber: number; total: number; refundedTotal: number; paymentStatus: string; fulfillmentStatus: string; carrier?: string | null; trackingNumber?: string | null } }) {
@@ -10,7 +10,7 @@ export function OrderActions({ order }: { order: { id: string; orderNumber: numb
   const [modal, setModal] = useState<null | "fulfill" | "refund" | "cancel">(null);
   const [carrier, setCarrier] = useState(order.carrier ?? "USPS");
   const [tracking, setTracking] = useState(order.trackingNumber ?? "");
-  const [notify, setNotify] = useState(true);
+  const [notify, setNotify] = useState(!order.trackingNumber);
   const [refundAmt, setRefundAmt] = useState((order.total - order.refundedTotal).toFixed(2));
   const [refundReason, setRefundReason] = useState("");
   const [restock, setRestock] = useState(true);
@@ -34,8 +34,10 @@ export function OrderActions({ order }: { order: { id: string; orderNumber: numb
         {order.paymentStatus !== "paid" && (
           <button onClick={() => run(() => markPaidManuallyAction(order.id))} className="btn btn-outline text-sm"><CheckCircle2 size={16} /> Mark as paid</button>
         )}
-        {order.fulfillmentStatus !== "fulfilled" && (
+        {order.fulfillmentStatus !== "fulfilled" ? (
           <button onClick={() => setModal("fulfill")} className="btn btn-primary text-sm"><Truck size={16} /> Fulfill & ship</button>
+        ) : (
+          <button onClick={() => setModal("fulfill")} className="btn btn-outline text-sm"><Truck size={16} /> {order.trackingNumber ? "Edit tracking" : "Add tracking"}</button>
         )}
         {refundable > 0 && order.paymentStatus === "paid" && (
           <button onClick={() => setModal("refund")} className="btn btn-outline text-sm"><RotateCcw size={16} /> Refund</button>
@@ -45,7 +47,7 @@ export function OrderActions({ order }: { order: { id: string; orderNumber: numb
       </div>
 
       {modal === "fulfill" && (
-        <Modal title="Fulfill order" onClose={() => setModal(null)}>
+        <Modal title={order.fulfillmentStatus === "fulfilled" ? "Edit tracking" : "Fulfill order"} onClose={() => setModal(null)}>
           <label className="label">Carrier</label>
           <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="input">
             <option>USPS</option><option>UPS</option><option>FedEx</option>
@@ -55,7 +57,7 @@ export function OrderActions({ order }: { order: { id: string; orderNumber: numb
           <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-forest-700" /> Email customer shipping notification</label>
           {msg && <p className="mt-2 text-sm text-red-600">{msg}</p>}
           <button onClick={() => run(() => fulfillOrderAction({ orderId: order.id, carrier, trackingNumber: tracking, notify }))} disabled={pending} className="btn btn-primary mt-4 w-full">
-            {pending ? <Loader2 className="animate-spin" size={16} /> : "Mark as fulfilled"}
+            {pending ? <Loader2 className="animate-spin" size={16} /> : order.fulfillmentStatus === "fulfilled" ? "Save tracking" : "Mark as fulfilled"}
           </button>
         </Modal>
       )}
