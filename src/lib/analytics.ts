@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { subDays, startOfDay, format } from "date-fns";
+import { safeJson } from "@/lib/utils";
 
 export interface DateRange {
   from: Date;
@@ -195,6 +196,27 @@ export async function getTopPages(range: DateRange, limit = 8) {
     .slice(0, limit);
 }
 
+/** Resolve a human-readable traffic source label from UTM/referrer data. */
+export function sourceFromEvent(utmSource?: string | null, referrer?: string | null): string {
+  if (utmSource) return utmSource.charAt(0).toUpperCase() + utmSource.slice(1);
+  if (referrer) {
+    try {
+      const domain = new URL(referrer).hostname.replace("www.", "");
+      if (domain.includes("google")) return "Google";
+      if (domain.includes("facebook")) return "Facebook";
+      if (domain.includes("instagram")) return "Instagram";
+      if (domain.includes("twitter") || domain.includes("x.com")) return "Twitter/X";
+      if (domain.includes("pinterest")) return "Pinterest";
+      if (domain.includes("reddit")) return "Reddit";
+      if (domain.includes("tiktok")) return "TikTok";
+      return domain;
+    } catch {
+      return "Referral";
+    }
+  }
+  return "Direct";
+}
+
 /** Traffic sources including direct, organic, referral, social, etc. */
 export async function getDetailedTrafficSources(range: DateRange) {
   const events = await prisma.analyticsEvent.findMany({
@@ -204,25 +226,7 @@ export async function getDetailedTrafficSources(range: DateRange) {
 
   const sources = new Map<string, number>();
   for (const e of events) {
-    let source = "Direct";
-    if (e.utmSource) {
-      source = e.utmSource.charAt(0).toUpperCase() + e.utmSource.slice(1);
-    } else if (e.referrer) {
-      try {
-        const url = new URL(e.referrer);
-        const domain = url.hostname.replace("www.", "");
-        if (domain.includes("google")) source = "Google";
-        else if (domain.includes("facebook")) source = "Facebook";
-        else if (domain.includes("instagram")) source = "Instagram";
-        else if (domain.includes("twitter") || domain.includes("x.com")) source = "Twitter/X";
-        else if (domain.includes("pinterest")) source = "Pinterest";
-        else if (domain.includes("reddit")) source = "Reddit";
-        else if (domain.includes("tiktok")) source = "TikTok";
-        else source = domain;
-      } catch {
-        source = "Referral";
-      }
-    }
+    const source = sourceFromEvent(e.utmSource, e.referrer);
     sources.set(source, (sources.get(source) ?? 0) + 1);
   }
 
@@ -230,4 +234,103 @@ export async function getDetailedTrafficSources(range: DateRange) {
   return Array.from(sources.entries())
     .map(([source, count]) => ({ source, visits: count, pct: (count / total) * 100 }))
     .sort((a, b) => b.visits - a.visits);
+}
+
+export interface SessionSummary {
+  sessionId: string;
+  firstSeen: Date;
+  lastSeen: Date;
+  durationSec: number;
+  pageViews: number;
+  entryPath: string;
+  exitPath: string;
+  source: string;
+  device: string;
+  browser: string;
+  os: string;
+  converted: boolean;
+  orderValue: number;
+  userEmail: string | null;
+}
+
+/** Every session in range, newest first, with full timing/device/conversion detail. */
+export async function getSessionsList(range: DateRange, limit = 200): Promise<SessionSummary[]> {
+  const events = await prisma.analyticsEvent.findMany({
+    where: { createdAt: { gte: range.from, lte: range.to }, sessionId: { not: null } },
+    select: { sessionId: true, type: true, path: true, referrer: true, utmSource: true, metaJson: true, value: true, orderId: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const byOrderId = [...new Set(events.filter((e) => e.orderId).map((e) => e.orderId as string))];
+  const orders = byOrderId.length ? await prisma.order.findMany({ where: { id: { in: byOrderId } }, select: { id: true, email: true } }) : [];
+  const orderEmail = new Map(orders.map((o) => [o.id, o.email]));
+
+  const sessions = new Map<string, typeof events>();
+  for (const e of events) {
+    const sid = e.sessionId as string;
+    if (!sessions.has(sid)) sessions.set(sid, []);
+    sessions.get(sid)!.push(e);
+  }
+
+  const summaries: SessionSummary[] = [];
+  for (const [sessionId, evs] of sessions) {
+    const pageViews = evs.filter((e) => e.type === "page_view");
+    const first = evs[0];
+    const last = evs[evs.length - 1];
+    const meta = pageViews[0] ? safeJson<{ device?: string; browser?: string; os?: string }>(pageViews[0].metaJson, {}) : {};
+    const purchase = evs.find((e) => e.type === "purchase");
+    const orderId = purchase?.orderId ?? evs.find((e) => e.orderId)?.orderId ?? null;
+
+    summaries.push({
+      sessionId,
+      firstSeen: first.createdAt,
+      lastSeen: last.createdAt,
+      durationSec: (last.createdAt.getTime() - first.createdAt.getTime()) / 1000,
+      pageViews: pageViews.length,
+      entryPath: pageViews[0]?.path ?? "—",
+      exitPath: pageViews[pageViews.length - 1]?.path ?? "—",
+      source: sourceFromEvent(pageViews[0]?.utmSource, pageViews[0]?.referrer),
+      device: meta.device ?? "Unknown",
+      browser: meta.browser ?? "Unknown",
+      os: meta.os ?? "Unknown",
+      converted: !!purchase,
+      orderValue: purchase?.value ?? 0,
+      userEmail: orderId ? orderEmail.get(orderId) ?? null : null,
+    });
+  }
+
+  return summaries.sort((a, b) => b.firstSeen.getTime() - a.firstSeen.getTime()).slice(0, limit);
+}
+
+export interface SessionEvent {
+  type: string;
+  createdAt: Date;
+  label: string;
+}
+
+/** Full chronological event timeline for a single session. */
+export async function getSessionDetail(sessionId: string): Promise<SessionEvent[]> {
+  const events = await prisma.analyticsEvent.findMany({
+    where: { sessionId },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const productIds = [...new Set(events.filter((e) => e.productId).map((e) => e.productId as string))];
+  const products = productIds.length ? await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, title: true } }) : [];
+  const productTitle = new Map(products.map((p) => [p.id, p.title]));
+
+  const orderIds = [...new Set(events.filter((e) => e.orderId).map((e) => e.orderId as string))];
+  const orders = orderIds.length ? await prisma.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, orderNumber: true } }) : [];
+  const orderNumber = new Map(orders.map((o) => [o.id, o.orderNumber]));
+
+  return events.map((e) => {
+    let label = e.type;
+    if (e.type === "page_view") label = `Viewed page ${e.path}`;
+    else if (e.type === "product_view") label = `Viewed product: ${e.productId ? productTitle.get(e.productId) ?? "product" : "product"}`;
+    else if (e.type === "add_to_cart") label = `Added to cart: ${e.productId ? productTitle.get(e.productId) ?? "product" : "product"}`;
+    else if (e.type === "begin_checkout") label = `Began checkout${e.orderId ? ` — order #${orderNumber.get(e.orderId) ?? "?"}` : ""} (${e.value ? `$${e.value.toFixed(2)}` : ""})`;
+    else if (e.type === "purchase") label = `Purchased${e.orderId ? ` — order #${orderNumber.get(e.orderId) ?? "?"}` : ""} ($${(e.value ?? 0).toFixed(2)})`;
+    else if (e.type === "search") label = `Searched: "${safeJson<{ q?: string }>(e.metaJson, {}).q ?? ""}"`;
+    return { type: e.type, createdAt: e.createdAt, label };
+  });
 }

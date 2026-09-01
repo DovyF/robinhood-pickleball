@@ -1,8 +1,10 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { AnalyticsEventType } from "@/lib/enums";
+import { parseUserAgent } from "@/lib/user-agent";
 
 const schema = z.object({
   path: z.string().max(500),
@@ -19,6 +21,10 @@ export async function trackPageViewAction(raw: unknown) {
   if (!parsed.success) return { ok: false };
   const { path, sessionId, referrer, utmSource, utmMedium, utmCampaign } = parsed.data;
 
+  const h = await headers();
+  const ua = h.get("user-agent");
+  const { device, browser, os } = parseUserAgent(ua);
+
   await prisma.analyticsEvent
     .create({
       data: {
@@ -29,6 +35,7 @@ export async function trackPageViewAction(raw: unknown) {
         utmSource: utmSource || null,
         utmMedium: utmMedium || null,
         utmCampaign: utmCampaign || null,
+        metaJson: JSON.stringify({ device, browser, os }),
       },
     })
     .catch(() => {});

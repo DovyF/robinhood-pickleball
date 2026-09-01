@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { getDashboardMetrics, getSalesSeries, getTopProducts, getDetailedTrafficSources, getFunnel, getAbandonedCarts, getCustomerLifetimeValue, getSessionMetrics, getTopPages, rangeFromParam } from "@/lib/analytics";
 import { StatCard, Card, PageHeader } from "@/components/admin/ui";
 import { SalesChart } from "@/components/admin/SalesChart";
@@ -25,6 +27,10 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       <PageHeader title="Analytics" subtitle="Store performance" action={<DateRangePicker current={rangeParam ?? "30d"} />} />
+
+      <Link href={`/admin/analytics/sessions?range=${rangeParam ?? "30d"}`} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
+        View every session with timestamps, device, and full timeline <ArrowRight size={14} />
+      </Link>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Revenue" value={formatMoney(metrics.revenue)} change={metrics.revenueChange} />
