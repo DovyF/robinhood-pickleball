@@ -51,7 +51,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           {order.items.map((i) => (
             <li key={i.id} className="flex items-center gap-3 py-3">
               <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-cream">
-                {i.imageUrl && <Image src={i.imageUrl} alt={i.title} fill sizes="64px" className="object-cover" />}
+                {i.imageUrl && <Image src={i.imageUrl} alt={i.title} fill sizes="64px" className="object-contain p-1" />}
               </div>
               <div className="flex-1 text-sm">
                 <p className="font-medium">{i.title}</p>

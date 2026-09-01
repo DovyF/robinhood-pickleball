@@ -58,7 +58,7 @@ export function CartDrawer() {
               {cart.lines.map((line) => (
                 <li key={line.id} className="flex gap-3 py-4">
                   <Link href={`/products/${line.slug}`} onClick={closeCart} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-panel">
-                    {line.imageUrl && <Image src={line.imageUrl} alt={line.title} fill sizes="80px" className="object-cover" />}
+                    {line.imageUrl && <Image src={line.imageUrl} alt={line.title} fill sizes="80px" className="object-contain p-1" />}
                   </Link>
                   <div className="flex flex-1 flex-col">
                     <div className="flex justify-between gap-2">

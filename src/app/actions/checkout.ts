@@ -7,6 +7,7 @@ import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { AnalyticsEventType } from "@/lib/enums";
+import { currentSessionId } from "@/lib/session-tracking";
 
 const addressSchema = z.object({
   firstName: z.string().min(1),
@@ -70,6 +71,7 @@ const placeSchema = z.object({
   shippingLabel: z.string(),
   shippingCarrier: z.string(),
   discountCode: z.string().nullable().optional(),
+  marketingOptIn: z.boolean().optional(),
 });
 
 /**
@@ -107,7 +109,19 @@ export async function placeOrderAction(raw: unknown) {
     userId: session?.user?.id ?? null,
   });
 
-  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.BEGIN_CHECKOUT, orderId: order.id, value: totals.total } }).catch(() => {});
+  const sessionId = await currentSessionId();
+  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.BEGIN_CHECKOUT, orderId: order.id, value: totals.total, sessionId } }).catch(() => {});
+
+  if (input.marketingOptIn) {
+    const normalized = input.email.toLowerCase().trim();
+    prisma.user
+      .upsert({
+        where: { email: normalized },
+        update: { marketingOptIn: true },
+        create: { email: normalized, marketingOptIn: true, role: "customer" },
+      })
+      .catch(() => {});
+  }
 
   if (stripeConfigured()) {
     const stripe = getStripe();
@@ -115,7 +129,7 @@ export async function placeOrderAction(raw: unknown) {
       amount: Math.round(totals.total * 100),
       currency: "usd",
       automatic_payment_methods: { enabled: true },
-      metadata: { orderId: order.id, orderNumber: String(order.orderNumber) },
+      metadata: { orderId: order.id, orderNumber: String(order.orderNumber), sessionId: sessionId ?? "" },
       receipt_email: input.email,
     });
     await prisma.order.update({ where: { id: order.id }, data: { stripePaymentIntentId: intent.id } });
@@ -124,7 +138,7 @@ export async function placeOrderAction(raw: unknown) {
 
   // Demo mode — no Stripe keys yet
   await markOrderPaid(order.id);
-  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PURCHASE, orderId: order.id, value: totals.total } }).catch(() => {});
+  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PURCHASE, orderId: order.id, value: totals.total, sessionId } }).catch(() => {});
   return { ok: true as const, orderId: order.id, orderNumber: order.orderNumber, clientSecret: null, demo: true as const };
 }
 

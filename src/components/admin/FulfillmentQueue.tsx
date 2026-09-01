@@ -221,7 +221,7 @@ export function FulfillmentQueue({ orders }: { orders: any[] }) {
                             alt=""
                             fill
                             sizes="40px"
-                            className="object-cover"
+                            className="object-contain p-0.5"
                           />
                         )}
                       </div>

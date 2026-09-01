@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header, type NavItem } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { ChromeGate } from "@/components/layout/ChromeGate";
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import { getNavigation, getSettings } from "@/lib/repo";
 import { getCartView } from "@/lib/cart";
 
@@ -32,6 +34,9 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       cartProvider={<CartProvider initialCart={cart} />}
     >
       {children}
+      <Suspense fallback={null}>
+        <PageViewTracker />
+      </Suspense>
     </ChromeGate>
   );
 }

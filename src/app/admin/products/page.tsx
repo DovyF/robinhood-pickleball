@@ -59,7 +59,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
                     <td className="px-4 py-3">
                       <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3">
                         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-cream">
-                          {p.images[0] && <Image src={p.images[0].url} alt="" fill sizes="40px" className="object-cover" />}
+                          {p.images[0] && <Image src={p.images[0].url} alt="" fill sizes="40px" className="object-contain p-0.5" />}
                         </div>
                         <span className="font-medium">{p.title}</span>
                       </Link>

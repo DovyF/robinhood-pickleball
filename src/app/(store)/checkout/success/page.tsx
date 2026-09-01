@@ -36,7 +36,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           {order.items.map((i) => (
             <li key={i.id} className="flex items-center gap-3 py-3">
               <div className="relative h-14 w-14 overflow-hidden rounded-lg bg-cream">
-                {i.imageUrl && <Image src={i.imageUrl} alt={i.title} fill sizes="56px" className="object-cover" />}
+                {i.imageUrl && <Image src={i.imageUrl} alt={i.title} fill sizes="56px" className="object-contain p-1" />}
               </div>
               <div className="flex-1 text-sm">
                 <p className="font-medium">{i.title}</p>

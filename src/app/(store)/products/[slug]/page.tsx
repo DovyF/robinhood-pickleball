@@ -6,6 +6,7 @@ import { ProductView } from "@/components/product/ProductView";
 import { Reviews } from "@/components/product/Reviews";
 import { prisma } from "@/lib/prisma";
 import { AnalyticsEventType } from "@/lib/enums";
+import { currentSessionId } from "@/lib/session-tracking";
 
 export async function generateStaticParams() {
   const products = await prisma.product.findMany({ where: { status: "active" }, select: { slug: true }, take: 50 });
@@ -35,7 +36,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
 
   // analytics (fire and forget)
-  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PRODUCT_VIEW, productId: product.id } }).catch(() => {});
+  currentSessionId().then((sessionId) =>
+    prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PRODUCT_VIEW, productId: product.id, sessionId } })
+  ).catch(() => {});
 
   const jsonLd = {
     "@context": "https://schema.org",

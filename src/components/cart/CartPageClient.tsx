@@ -45,7 +45,7 @@ export function CartPageClient({ initialCart }: { initialCart: CartView }) {
           {cart.lines.map((line) => (
             <li key={line.id} className="flex gap-4 py-5">
               <Link href={`/products/${line.slug}`} className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-panel">
-                {line.imageUrl && <Image src={line.imageUrl} alt={line.title} fill sizes="96px" className="object-cover" />}
+                {line.imageUrl && <Image src={line.imageUrl} alt={line.title} fill sizes="96px" className="object-contain p-1.5" />}
               </Link>
               <div className="flex flex-1 flex-col">
                 <div className="flex justify-between gap-3">

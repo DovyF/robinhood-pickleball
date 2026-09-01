@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     orderBy: { salesCount: "desc" },
   });
 
-  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.SEARCH, metaJson: JSON.stringify({ q }) } }).catch(() => {});
+  prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.SEARCH, metaJson: JSON.stringify({ q }), sessionId: req.cookies.get("rp_sid")?.value } }).catch(() => {});
 
   return NextResponse.json({
     results: products.map((p) => ({

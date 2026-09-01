@@ -21,6 +21,7 @@ const empty: CheckoutAddress = { firstName: "", lastName: "", line1: "", line2: 
 export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartView; defaultEmail: string; stripeKey: string }) {
   const router = useRouter();
   const [email, setEmail] = useState(defaultEmail);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [addr, setAddr] = useState<CheckoutAddress>(empty);
   const [rates, setRates] = useState<ShippingRate[]>([]);
   const [rate, setRate] = useState<ShippingRate | null>(null);
@@ -74,6 +75,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
         shippingLabel: rate.label,
         shippingCarrier: rate.carrier,
         discountCode: cart.discountCode,
+        marketingOptIn,
       });
       if (!res.ok) return setError(res.error);
       if (res.demo || !res.clientSecret) {
@@ -113,6 +115,10 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
               <h2 className="mb-3 font-display text-2xl tracking-wide text-white">Contact</h2>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" className="input" />
               <p className="mt-2 text-xs text-ink-soft">Order confirmation and tracking go here.</p>
+              <label className="mt-3 flex items-start gap-2 text-sm text-ink-soft">
+                <input type="checkbox" checked={marketingOptIn} onChange={(e) => setMarketingOptIn(e.target.checked)} className="mt-0.5 accent-forest-700" />
+                Email me updates on my order and new products
+              </label>
             </section>
             <section>
               <h2 className="mb-3 font-display text-2xl tracking-wide text-white">Shipping address</h2>

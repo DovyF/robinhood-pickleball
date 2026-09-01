@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       const orderId = pi.metadata?.orderId;
       if (orderId) {
         await markOrderPaid(orderId, pi.id, typeof pi.latest_charge === "string" ? pi.latest_charge : undefined);
-        prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PURCHASE, orderId, value: pi.amount / 100 } }).catch(() => {});
+        prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PURCHASE, orderId, value: pi.amount / 100, sessionId: pi.metadata?.sessionId || null } }).catch(() => {});
       }
       break;
     }

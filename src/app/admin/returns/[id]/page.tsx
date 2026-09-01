@@ -45,7 +45,7 @@ export default async function AdminReturnDetail({ params }: { params: Promise<{ 
             <ul className="divide-y divide-cream-dark">
               {returnedItems.map((i) => (
                 <li key={i.id} className="flex items-center gap-3 py-4">
-                  <div className="relative h-14 w-14 overflow-hidden rounded-lg bg-cream-dark shrink-0">{i.imageUrl && <Image src={i.imageUrl} alt="" fill sizes="56px" className="object-cover" />}</div>
+                  <div className="relative h-14 w-14 overflow-hidden rounded-lg bg-cream-dark shrink-0">{i.imageUrl && <Image src={i.imageUrl} alt="" fill sizes="56px" className="object-contain p-1" />}</div>
                   <div className="flex-1 text-sm">
                     <p className="font-medium text-ink">{i.title}</p>
                     {i.variantTitle && <p className="text-ink-soft text-xs">{i.variantTitle}</p>}

@@ -115,7 +115,7 @@ export function ReturnRequestForm() {
               <label key={i.id} className={cn("flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5", selected[i.id] ? "border-forest-700 ring-1 ring-forest-700" : "border-cream-dark")}>
                 <input type="checkbox" checked={!!selected[i.id]} onChange={(e) => setSelected((s) => ({ ...s, [i.id]: e.target.checked }))} className="accent-forest-700" />
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-cream">
-                  {i.imageUrl && <Image src={i.imageUrl} alt="" fill sizes="48px" className="object-cover" />}
+                  {i.imageUrl && <Image src={i.imageUrl} alt="" fill sizes="48px" className="object-contain p-1" />}
                 </div>
                 <div className="flex-1 text-sm">
                   <p className="font-medium text-ink">{i.title}</p>

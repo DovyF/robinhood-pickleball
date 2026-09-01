@@ -42,7 +42,7 @@ export default async function OrdersPage() {
             <div className="flex -space-x-3">
               {o.items.slice(0, 4).map((i) => (
                 <div key={i.id} className="relative h-12 w-12 overflow-hidden rounded-lg border-2 border-white bg-cream">
-                  {i.imageUrl && <Image src={i.imageUrl} alt={i.title} fill sizes="48px" className="object-cover" />}
+                  {i.imageUrl && <Image src={i.imageUrl} alt={i.title} fill sizes="48px" className="object-contain p-1" />}
                 </div>
               ))}
             </div>
