@@ -1,26 +1,39 @@
 import Link from "next/link";
-import { ArrowLeft, Monitor, Smartphone, Tablet } from "lucide-react";
+import { ArrowLeft, Monitor, Smartphone, Tablet, Bot } from "lucide-react";
 import { getSessionsList, rangeFromParam } from "@/lib/analytics";
 import { PageHeader, Card, EmptyState } from "@/components/admin/ui";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
-import { formatMoney, formatDate } from "@/lib/utils";
+import { formatMoney, formatDate, cn } from "@/lib/utils";
 
 const DEVICE_ICON = { Mobile: Smartphone, Tablet: Tablet, Desktop: Monitor } as const;
 
-export default async function SessionsPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
-  const { range: rangeParam } = await searchParams;
+export default async function SessionsPage({ searchParams }: { searchParams: Promise<{ range?: string; bots?: string }> }) {
+  const { range: rangeParam, bots } = await searchParams;
   const effectiveRange = rangeParam ?? "all";
   const range = rangeFromParam(effectiveRange);
-  const sessions = await getSessionsList(range, 1000);
+  const showBots = bots === "1";
+  const allSessions = await getSessionsList(range, 1000);
+  const botCount = allSessions.filter((s) => s.isBot).length;
+  const sessions = showBots ? allSessions : allSessions.filter((s) => !s.isBot);
 
   return (
     <div>
       <Link href="/admin/analytics" className="mb-4 inline-flex items-center gap-1 text-sm text-ink-soft hover:text-forest-700 transition"><ArrowLeft size={15} /> Back to Analytics</Link>
-      <PageHeader title="Sessions" subtitle={`${sessions.length} sessions${effectiveRange === "all" ? " all time" : " in range"}`} action={<DateRangePicker current={effectiveRange} />} />
+      <PageHeader title="Sessions" subtitle={`${sessions.length} sessions${effectiveRange === "all" ? " all time" : " in range"}${!showBots && botCount ? ` · ${botCount} bot/crawler session${botCount !== 1 ? "s" : ""} hidden` : ""}`} action={<DateRangePicker current={effectiveRange} />} />
 
-      <Link href="/admin/analytics/legacy" className="mb-4 inline-block text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
-        View events from before session tracking (product views, add-to-carts, etc. before Sept 1) →
-      </Link>
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <Link href="/admin/analytics/legacy" className="text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
+          View events from before session tracking →
+        </Link>
+        {botCount > 0 && (
+          <Link
+            href={`/admin/analytics/sessions?range=${effectiveRange}${showBots ? "" : "&bots=1"}`}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-forest-700 transition"
+          >
+            <Bot size={14} /> {showBots ? "Hide" : "Show"} {botCount} bot/crawler session{botCount !== 1 ? "s" : ""}
+          </Link>
+        )}
+      </div>
 
       {sessions.length === 0 ? (
         <EmptyState title="No sessions yet" subtitle="Visitor sessions will appear here as people browse the store." />
@@ -43,7 +56,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                 {sessions.map((s) => {
                   const Icon = DEVICE_ICON[s.device as keyof typeof DEVICE_ICON] ?? Monitor;
                   return (
-                    <tr key={s.sessionId} className="hover:bg-cream-dark/30 transition">
+                    <tr key={s.sessionId} className={cn("hover:bg-cream-dark/30 transition", s.isBot && "opacity-60")}>
                       <td className="px-4 py-3">
                         <Link href={`/admin/analytics/sessions/${s.sessionId}`} className="font-medium text-forest-700 hover:text-gold-300">
                           {formatDate(s.firstSeen, { dateStyle: "medium", timeStyle: "short" })}
@@ -52,7 +65,13 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                       <td className="px-4 py-3 text-ink-soft">{s.durationSec < 60 ? `${Math.round(s.durationSec)}s` : `${Math.floor(s.durationSec / 60)}m ${Math.round(s.durationSec % 60)}s`}</td>
                       <td className="px-4 py-3">{s.pageViews}</td>
                       <td className="px-4 py-3 font-mono text-xs text-ink-soft">{s.entryPath}</td>
-                      <td className="px-4 py-3">{s.source}</td>
+                      <td className="px-4 py-3">
+                        {s.isBot ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600"><Bot size={12} /> {s.botName}</span>
+                        ) : (
+                          s.source
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 text-ink-soft"><Icon size={14} /> {s.device} · {s.browser}</span>
                       </td>

@@ -80,7 +80,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                 <li key={r.id}>
                   <Link href={`/products/${r.slug}`} onClick={onClose} className="flex items-center gap-3 py-3 hover:bg-cream-dark/50 rounded-lg px-2">
                     <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-panel">
-                      {r.image && <Image src={r.image} alt="" fill sizes="48px" className="object-cover" />}
+                      {r.image && <Image src={r.image} alt="" fill sizes="48px" className="object-contain p-1" />}
                     </div>
                     <span className="flex-1 font-medium">{r.title}</span>
                     <span className="text-sm font-semibold">{formatMoney(r.price)}</span>

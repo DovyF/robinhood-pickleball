@@ -17,11 +17,12 @@ export function rangeFromParam(param?: string): DateRange {
 /** Distinct visitor sessions in range (page_view events grouped by sessionId) — the correct
  * denominator for conversion rate and the funnel's "Sessions" stage. Not a raw event count. */
 export async function countDistinctSessions(range: DateRange): Promise<number> {
-  const rows = await prisma.analyticsEvent.groupBy({
-    by: ["sessionId"],
+  const rows = await prisma.analyticsEvent.findMany({
     where: { type: "page_view", createdAt: { gte: range.from, lte: range.to }, sessionId: { not: null } },
+    select: { sessionId: true, metaJson: true },
   });
-  return rows.length;
+  const human = new Set(rows.filter((r) => !isBotEvent(r.metaJson)).map((r) => r.sessionId));
+  return human.size;
 }
 
 /** Core KPIs for the admin dashboard within a date range. */
@@ -159,13 +160,19 @@ export async function getCustomerLifetimeValue() {
   return { avgLtv: totalLtv / count, customers: agg.length };
 }
 
-/** Session duration, bounce rate, pages per session. */
+function isBotEvent(metaJson: string | null): boolean {
+  return !!safeJson<{ isBot?: boolean }>(metaJson, {}).isBot;
+}
+
+/** Session duration, bounce rate, pages per session. Excludes bot/crawler traffic. */
 export async function getSessionMetrics(range: DateRange) {
-  const events = await prisma.analyticsEvent.findMany({
-    where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } },
-    select: { sessionId: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
+  const events = (
+    await prisma.analyticsEvent.findMany({
+      where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } },
+      select: { sessionId: true, createdAt: true, metaJson: true },
+      orderBy: { createdAt: "asc" },
+    })
+  ).filter((e) => !isBotEvent(e.metaJson));
 
   const sessions = new Map<string, { first: Date; last: Date; count: number }>();
   for (const e of events) {
@@ -188,12 +195,14 @@ export async function getSessionMetrics(range: DateRange) {
   return { avgDuration, bounceRate, avgPagesPerSession, totalSessions: sessions.size };
 }
 
-/** Top pages by views. */
+/** Top pages by views. Excludes bot/crawler traffic. */
 export async function getTopPages(range: DateRange, limit = 8) {
-  const events = await prisma.analyticsEvent.findMany({
-    where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } },
-    select: { path: true },
-  });
+  const events = (
+    await prisma.analyticsEvent.findMany({
+      where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } },
+      select: { path: true, metaJson: true },
+    })
+  ).filter((e) => !isBotEvent(e.metaJson));
 
   const pages = new Map<string, number>();
   for (const e of events) {
@@ -213,10 +222,16 @@ export function sourceFromEvent(utmSource?: string | null, referrer?: string | n
   if (referrer) {
     try {
       const domain = new URL(referrer).hostname.replace("www.", "");
-      if (domain.includes("google")) return "Google";
-      if (domain.includes("facebook")) return "Facebook";
+      // Meta's outbound-link redirector (l.facebook.com / lm.facebook.com) is shared
+      // infrastructure used by BOTH Instagram and Facebook when a tap on an in-app
+      // link goes through the "you're leaving the app" interstitial — the hostname
+      // alone can't tell them apart, so don't confidently call it "Facebook" when it
+      // could just as easily be an Instagram bio/DM/story link.
+      if (domain === "l.facebook.com" || domain === "lm.facebook.com") return "Instagram/Facebook (via Meta link)";
       if (domain.includes("instagram")) return "Instagram";
-      if (domain.includes("twitter") || domain.includes("x.com")) return "Twitter/X";
+      if (domain.includes("facebook")) return "Facebook";
+      if (domain.includes("google")) return "Google";
+      if (domain.includes("twitter") || domain.includes("x.com") || domain === "t.co") return "Twitter/X";
       if (domain.includes("pinterest")) return "Pinterest";
       if (domain.includes("reddit")) return "Reddit";
       if (domain.includes("tiktok")) return "TikTok";
@@ -228,12 +243,14 @@ export function sourceFromEvent(utmSource?: string | null, referrer?: string | n
   return "Direct";
 }
 
-/** Traffic sources including direct, organic, referral, social, etc. */
+/** Traffic sources including direct, organic, referral, social, etc. Excludes bot/crawler traffic. */
 export async function getDetailedTrafficSources(range: DateRange) {
-  const events = await prisma.analyticsEvent.findMany({
-    where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } },
-    select: { utmSource: true, referrer: true },
-  });
+  const events = (
+    await prisma.analyticsEvent.findMany({
+      where: { type: "page_view", createdAt: { gte: range.from, lte: range.to } },
+      select: { utmSource: true, referrer: true, metaJson: true },
+    })
+  ).filter((e) => !isBotEvent(e.metaJson));
 
   const sources = new Map<string, number>();
   for (const e of events) {
@@ -262,9 +279,13 @@ export interface SessionSummary {
   converted: boolean;
   orderValue: number;
   userEmail: string | null;
+  isBot: boolean;
+  botName: string | null;
 }
 
-/** Every session in range, newest first, with full timing/device/conversion detail. */
+/** Every session in range, newest first, with full timing/device/conversion detail.
+ * Includes bot/crawler sessions (flagged via isBot) rather than hiding them — the
+ * caller decides whether to show them. */
 export async function getSessionsList(range: DateRange, limit = 200): Promise<SessionSummary[]> {
   const events = await prisma.analyticsEvent.findMany({
     where: { createdAt: { gte: range.from, lte: range.to }, sessionId: { not: null } },
@@ -288,7 +309,7 @@ export async function getSessionsList(range: DateRange, limit = 200): Promise<Se
     const pageViews = evs.filter((e) => e.type === "page_view");
     const first = evs[0];
     const last = evs[evs.length - 1];
-    const meta = pageViews[0] ? safeJson<{ device?: string; browser?: string; os?: string }>(pageViews[0].metaJson, {}) : {};
+    const meta = pageViews[0] ? safeJson<{ device?: string; browser?: string; os?: string; isBot?: boolean; botName?: string }>(pageViews[0].metaJson, {}) : {};
     const purchase = evs.find((e) => e.type === "purchase");
     const orderId = purchase?.orderId ?? evs.find((e) => e.orderId)?.orderId ?? null;
 
@@ -307,6 +328,8 @@ export async function getSessionsList(range: DateRange, limit = 200): Promise<Se
       converted: !!purchase,
       orderValue: purchase?.value ?? 0,
       userEmail: orderId ? orderEmail.get(orderId) ?? null : null,
+      isBot: !!meta.isBot,
+      botName: meta.botName ?? null,
     });
   }
 

@@ -109,7 +109,7 @@ export function ProductEditor({ initial }: { initial?: EditorProduct }) {
           <div className="flex flex-wrap gap-3">
             {p.images.map((url, i) => (
               <div key={i} className="group relative h-24 w-24 overflow-hidden rounded-lg bg-cream">
-                <Image src={url} alt="" fill sizes="96px" className="object-cover" />
+                <Image src={url} alt="" fill sizes="96px" className="object-contain p-1.5" />
                 <button onClick={() => set("images", p.images.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-ink/70 text-white opacity-0 transition group-hover:opacity-100">
                   <X size={13} />
                 </button>
