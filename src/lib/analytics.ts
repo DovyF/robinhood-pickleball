@@ -345,3 +345,44 @@ export async function getSessionDetail(sessionId: string): Promise<SessionEvent[
     return { type: e.type, createdAt: e.createdAt, label };
   });
 }
+
+export interface LegacyEvent {
+  type: string;
+  createdAt: Date;
+  label: string;
+  email: string | null;
+}
+
+/**
+ * Events recorded before session tracking existed (sessionId is null) — no
+ * cookie, no device, no email, because none of that was ever captured for
+ * product_view/add_to_cart. The only identity available is for events tied
+ * to a real order (begin_checkout/purchase), via that order's email.
+ */
+export async function getLegacyEvents(range: DateRange, limit = 500): Promise<LegacyEvent[]> {
+  const events = await prisma.analyticsEvent.findMany({
+    where: { createdAt: { gte: range.from, lte: range.to }, sessionId: null },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  const productIds = [...new Set(events.filter((e) => e.productId).map((e) => e.productId as string))];
+  const products = productIds.length ? await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, title: true } }) : [];
+  const productTitle = new Map(products.map((p) => [p.id, p.title]));
+
+  const orderIds = [...new Set(events.filter((e) => e.orderId).map((e) => e.orderId as string))];
+  const orders = orderIds.length ? await prisma.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, orderNumber: true, email: true } }) : [];
+  const orderInfo = new Map(orders.map((o) => [o.id, o]));
+
+  return events.map((e) => {
+    let label = e.type;
+    const order = e.orderId ? orderInfo.get(e.orderId) : undefined;
+    if (e.type === "page_view") label = `Viewed page ${e.path ?? "?"}`;
+    else if (e.type === "product_view") label = `Viewed product: ${e.productId ? productTitle.get(e.productId) ?? "product" : "product"}`;
+    else if (e.type === "add_to_cart") label = `Added to cart: ${e.productId ? productTitle.get(e.productId) ?? "product" : "product"}`;
+    else if (e.type === "begin_checkout") label = `Began checkout${order ? ` — order #${order.orderNumber}` : ""} (${e.value ? `$${e.value.toFixed(2)}` : ""})`;
+    else if (e.type === "purchase") label = `Purchased${order ? ` — order #${order.orderNumber}` : ""} ($${(e.value ?? 0).toFixed(2)})`;
+    else if (e.type === "search") label = `Searched: "${safeJson<{ q?: string }>(e.metaJson, {}).q ?? ""}"`;
+    return { type: e.type, createdAt: e.createdAt, label, email: order?.email ?? null };
+  });
+}

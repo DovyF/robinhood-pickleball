@@ -18,6 +18,10 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
       <Link href="/admin/analytics" className="mb-4 inline-flex items-center gap-1 text-sm text-ink-soft hover:text-forest-700 transition"><ArrowLeft size={15} /> Back to Analytics</Link>
       <PageHeader title="Sessions" subtitle={`${sessions.length} sessions${effectiveRange === "all" ? " all time" : " in range"}`} action={<DateRangePicker current={effectiveRange} />} />
 
+      <Link href="/admin/analytics/legacy" className="mb-4 inline-block text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
+        View events from before session tracking (product views, add-to-carts, etc. before Sept 1) →
+      </Link>
+
       {sessions.length === 0 ? (
         <EmptyState title="No sessions yet" subtitle="Visitor sessions will appear here as people browse the store." />
       ) : (
