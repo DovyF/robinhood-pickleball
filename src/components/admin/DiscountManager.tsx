@@ -69,32 +69,34 @@ export function DiscountManager({ discounts }: { discounts: Discount[] }) {
         </Card>
       )}
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-card">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b border-cream-dark text-left text-xs uppercase tracking-wide text-ink-soft">
-            <th className="px-4 py-3">Code</th><th className="px-4 py-3">Discount</th><th className="px-4 py-3">Used</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
-          </tr></thead>
-          <tbody className="divide-y divide-cream-dark">
-            {discounts.map((d) => (
-              <tr key={d.id} className="hover:bg-black/5">
-                <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 font-semibold"><Tag size={14} className="text-forest-600" />{d.code}</span></td>
-                <td className="px-4 py-3">{describe(d)}{d.minSubtotal ? ` · min ${formatMoney(d.minSubtotal)}` : ""}</td>
-                <td className="px-4 py-3">{d.usageCount}{d.usageLimit ? ` / ${d.usageLimit}` : ""}</td>
-                <td className="px-4 py-3"><StatusBadge status={d.status} /></td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => startTransition(() => toggleDiscountAction(d.id, d.status === "active" ? "disabled" : "active").then(() => {}))} className="text-xs font-semibold text-forest-700 hover:underline">
-                      {d.status === "active" ? "Disable" : "Enable"}
-                    </button>
-                    <button onClick={() => { if (confirm("Delete code?")) startTransition(() => deleteDiscountAction(d.id).then(() => {})); }} className="text-red-500 hover:text-red-700"><Trash2 size={15} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {discounts.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-soft">No discount codes yet.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-cream-dark bg-panel/50 text-left text-xs uppercase tracking-wide text-ink-soft">
+              <th className="px-4 py-3">Code</th><th className="px-4 py-3">Discount</th><th className="px-4 py-3">Used</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
+            </tr></thead>
+            <tbody className="divide-y divide-cream-dark">
+              {discounts.map((d) => (
+                <tr key={d.id} className="hover:bg-cream-dark/30 transition">
+                  <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 font-semibold text-ink"><Tag size={14} className="text-forest-500" />{d.code}</span></td>
+                  <td className="px-4 py-3 text-ink">{describe(d)}{d.minSubtotal ? ` · min ${formatMoney(d.minSubtotal)}` : ""}</td>
+                  <td className="px-4 py-3 text-ink">{d.usageCount}{d.usageLimit ? ` / ${d.usageLimit}` : ""}</td>
+                  <td className="px-4 py-3"><StatusBadge status={d.status} /></td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => startTransition(() => toggleDiscountAction(d.id, d.status === "active" ? "disabled" : "active").then(() => {}))} className="text-xs font-semibold text-forest-700 hover:underline">
+                        {d.status === "active" ? "Disable" : "Enable"}
+                      </button>
+                      <button onClick={() => { if (confirm("Delete code?")) startTransition(() => deleteDiscountAction(d.id).then(() => {})); }} className="text-red-500 hover:text-red-400"><Trash2 size={15} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {discounts.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-soft">No discount codes yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

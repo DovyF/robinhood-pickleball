@@ -51,24 +51,26 @@ export function PagesManager({ pages }: { pages: Pg[] }) {
   return (
     <div className="space-y-4">
       <button onClick={() => setEditing(blank)} className="btn btn-primary text-sm"><Plus size={16} /> Add page</button>
-      <div className="overflow-hidden rounded-2xl bg-white shadow-card">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b border-cream-dark text-left text-xs uppercase tracking-wide text-ink-soft">
-            <th className="px-4 py-3">Title</th><th className="px-4 py-3">Handle</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
-          </tr></thead>
-          <tbody className="divide-y divide-cream-dark">
-            {pages.map((p) => (
-              <tr key={p.id} className="hover:bg-black/5">
-                <td className="px-4 py-3"><button onClick={() => setEditing(p)} className="inline-flex items-center gap-1.5 font-medium text-forest-700"><FileText size={14} />{p.title}</button></td>
-                <td className="px-4 py-3 text-ink-soft">/{p.slug}</td>
-                <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                <td className="px-4 py-3 text-right"><button onClick={() => { if (confirm("Delete page?")) startTransition(() => deletePageAction(p.id!).then(() => {})); }} className="text-red-500 hover:text-red-700"><Trash2 size={15} /></button></td>
-              </tr>
-            ))}
-            {pages.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-ink-soft">No pages yet.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-cream-dark bg-panel/50 text-left text-xs uppercase tracking-wide text-ink-soft">
+              <th className="px-4 py-3">Title</th><th className="px-4 py-3">Handle</th><th className="px-4 py-3">Status</th><th className="px-4 py-3"></th>
+            </tr></thead>
+            <tbody className="divide-y divide-cream-dark">
+              {pages.map((p) => (
+                <tr key={p.id} className="hover:bg-cream-dark/30 transition">
+                  <td className="px-4 py-3"><button onClick={() => setEditing(p)} className="inline-flex items-center gap-1.5 font-medium text-forest-700 hover:text-gold-300"><FileText size={14} />{p.title}</button></td>
+                  <td className="px-4 py-3 text-ink-soft">/{p.slug}</td>
+                  <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
+                  <td className="px-4 py-3 text-right"><button onClick={() => { if (confirm("Delete page?")) startTransition(() => deletePageAction(p.id!).then(() => {})); }} className="text-red-500 hover:text-red-400"><Trash2 size={15} /></button></td>
+                </tr>
+              ))}
+              {pages.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-ink-soft">No pages yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

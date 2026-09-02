@@ -34,24 +34,26 @@ export function GiftCardManager({ cards }: { cards: GC[] }) {
           </form>
         </Card>
       )}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-card">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b border-cream-dark text-left text-xs uppercase tracking-wide text-ink-soft">
-            <th className="px-4 py-3">Code</th><th className="px-4 py-3">Balance</th><th className="px-4 py-3">Initial</th><th className="px-4 py-3">Status</th>
-          </tr></thead>
-          <tbody className="divide-y divide-cream-dark">
-            {cards.map((c) => (
-              <tr key={c.id} className="hover:bg-black/5">
-                <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold"><Gift size={14} className="text-forest-600" />{c.code}</span></td>
-                <td className="px-4 py-3 font-semibold">{formatMoney(c.balance)}</td>
-                <td className="px-4 py-3 text-ink-soft">{formatMoney(c.initialValue)}</td>
-                <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-              </tr>
-            ))}
-            {cards.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-ink-soft">No gift cards issued yet.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-cream-dark bg-panel/50 text-left text-xs uppercase tracking-wide text-ink-soft">
+              <th className="px-4 py-3">Code</th><th className="px-4 py-3">Balance</th><th className="px-4 py-3">Initial</th><th className="px-4 py-3">Status</th>
+            </tr></thead>
+            <tbody className="divide-y divide-cream-dark">
+              {cards.map((c) => (
+                <tr key={c.id} className="hover:bg-cream-dark/30 transition">
+                  <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-ink"><Gift size={14} className="text-forest-500" />{c.code}</span></td>
+                  <td className="px-4 py-3 font-semibold text-gold-300">{formatMoney(c.balance)}</td>
+                  <td className="px-4 py-3 text-ink-soft">{formatMoney(c.initialValue)}</td>
+                  <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
+                </tr>
+              ))}
+              {cards.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-ink-soft">No gift cards issued yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

@@ -23,12 +23,12 @@ export function DateRangePicker({ current }: { current: string }) {
   }
 
   return (
-    <div className="inline-flex rounded-full border border-cream-dark bg-white p-1">
+    <div className="inline-flex rounded-full border border-cream-dark bg-panel p-1">
       {RANGES.map((r) => (
         <button
           key={r.value}
           onClick={() => set(r.value)}
-          className={cn("rounded-full px-3 py-1.5 text-sm font-medium transition", current === r.value ? "bg-forest-700 text-white" : "text-ink-soft hover:text-ink")}
+          className={cn("rounded-full px-3 py-1.5 text-sm font-medium transition", current === r.value ? "bg-forest-700 text-black" : "text-ink-soft hover:text-ink hover:bg-cream-dark")}
         >
           {r.label}
         </button>
