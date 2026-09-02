@@ -23,7 +23,7 @@ export default async function AdminCustomers() {
             {customers.map((c) => {
               const spent = c.orders.reduce((s, o) => s + o.total, 0);
               return (
-                <tr key={c.id} className="hover:bg-cream/50">
+                <tr key={c.id} className="hover:bg-black/5">
                   <td className="px-4 py-3"><Link href={`/admin/customers/${c.id}`} className="font-medium text-forest-700">{c.name ?? "—"}</Link></td>
                   <td className="px-4 py-3 text-ink-soft">{c.email}</td>
                   <td className="px-4 py-3">{c.orders.length}</td>

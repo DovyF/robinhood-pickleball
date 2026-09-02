@@ -41,7 +41,7 @@ export function GiftCardManager({ cards }: { cards: GC[] }) {
           </tr></thead>
           <tbody className="divide-y divide-cream-dark">
             {cards.map((c) => (
-              <tr key={c.id} className="hover:bg-cream/50">
+              <tr key={c.id} className="hover:bg-black/5">
                 <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold"><Gift size={14} className="text-forest-600" />{c.code}</span></td>
                 <td className="px-4 py-3 font-semibold">{formatMoney(c.balance)}</td>
                 <td className="px-4 py-3 text-ink-soft">{formatMoney(c.initialValue)}</td>

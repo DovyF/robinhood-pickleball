@@ -17,10 +17,10 @@ export default async function LogsPage() {
           </tr></thead>
           <tbody className="divide-y divide-cream-dark">
             {logs.map((l) => (
-              <tr key={l.id} className="hover:bg-cream/50">
+              <tr key={l.id} className="hover:bg-black/5">
                 <td className="px-4 py-3 text-ink-soft">{formatDate(l.createdAt, { dateStyle: "medium", timeStyle: "short" })}</td>
                 <td className="px-4 py-3">{l.user?.email ?? "system"}</td>
-                <td className="px-4 py-3"><code className="rounded bg-cream px-1.5 py-0.5 text-xs">{l.action}</code></td>
+                <td className="px-4 py-3"><code className="rounded bg-cream px-1.5 py-0.5 text-xs text-ink">{l.action}</code></td>
                 <td className="px-4 py-3 text-ink-soft">{l.entity ?? "—"}</td>
                 <td className="px-4 py-3 text-ink-soft">{l.detail ?? "—"}</td>
               </tr>

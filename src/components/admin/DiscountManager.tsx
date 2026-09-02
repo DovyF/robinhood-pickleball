@@ -76,7 +76,7 @@ export function DiscountManager({ discounts }: { discounts: Discount[] }) {
           </tr></thead>
           <tbody className="divide-y divide-cream-dark">
             {discounts.map((d) => (
-              <tr key={d.id} className="hover:bg-cream/50">
+              <tr key={d.id} className="hover:bg-black/5">
                 <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 font-semibold"><Tag size={14} className="text-forest-600" />{d.code}</span></td>
                 <td className="px-4 py-3">{describe(d)}{d.minSubtotal ? ` · min ${formatMoney(d.minSubtotal)}` : ""}</td>
                 <td className="px-4 py-3">{d.usageCount}{d.usageLimit ? ` / ${d.usageLimit}` : ""}</td>

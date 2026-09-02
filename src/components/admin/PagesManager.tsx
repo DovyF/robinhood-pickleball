@@ -58,7 +58,7 @@ export function PagesManager({ pages }: { pages: Pg[] }) {
           </tr></thead>
           <tbody className="divide-y divide-cream-dark">
             {pages.map((p) => (
-              <tr key={p.id} className="hover:bg-cream/50">
+              <tr key={p.id} className="hover:bg-black/5">
                 <td className="px-4 py-3"><button onClick={() => setEditing(p)} className="inline-flex items-center gap-1.5 font-medium text-forest-700"><FileText size={14} />{p.title}</button></td>
                 <td className="px-4 py-3 text-ink-soft">/{p.slug}</td>
                 <td className="px-4 py-3"><StatusBadge status={p.status} /></td>

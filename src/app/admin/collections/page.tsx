@@ -19,7 +19,7 @@ export default async function AdminCollections() {
           </tr></thead>
           <tbody className="divide-y divide-cream-dark">
             {collections.map((c) => (
-              <tr key={c.id} className="hover:bg-cream/50">
+              <tr key={c.id} className="hover:bg-black/5">
                 <td className="px-4 py-3 font-medium">{c.title}</td>
                 <td className="px-4 py-3">{c._count.products}</td>
                 <td className="px-4 py-3"><StatusBadge status={c.status} /></td>

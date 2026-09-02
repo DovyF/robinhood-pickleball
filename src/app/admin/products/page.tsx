@@ -55,7 +55,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
                 const stock = p.variants.reduce((s, v) => s + (v.trackInventory ? v.inventoryQty : 0), 0);
                 const tracked = p.variants.some((v) => v.trackInventory);
                 return (
-                  <tr key={p.id} className="hover:bg-cream/50">
+                  <tr key={p.id} className="hover:bg-black/5">
                     <td className="px-4 py-3">
                       <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3">
                         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-cream">
