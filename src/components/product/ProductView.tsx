@@ -212,7 +212,7 @@ export function ProductView({ product }: ProductViewProps) {
               <span className="text-forest-700 transition-transform group-open:rotate-45">+</span>
             </summary>
             <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-              It&apos;s built to tournament spec, and official USAPA certification is in progress. For rec play, drills, and casual leagues you&apos;re good to go today. For sanctioned tournaments, certification is on the way — and this first batch is priced accordingly.
+              The Longbow is not currently USAPA-approved for sanctioned tournament play — certification is in progress. It&apos;s ready today for rec play, drills, and any casual league where USAPA approval isn&apos;t required, and this first batch is priced accordingly.
             </p>
           </details>
 

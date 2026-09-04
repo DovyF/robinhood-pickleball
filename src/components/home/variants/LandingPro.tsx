@@ -17,12 +17,12 @@ import { HeroReckoning } from "./HeroReckoning";
 const UNITS_LEFT = 190; // first-batch inventory — wire to live stock before launch
 
 const FAQS: [string, string][] = [
-  ["Can I use it in tournaments?", "For rec play, drills, and casual leagues — absolutely, today. Official USAPA certification for sanctioned tournaments is in progress. This first batch is priced accordingly."],
+  ["Can I use it in tournaments?", "The Longbow is not currently USAPA-approved for sanctioned tournament play — that certification is in progress. It's ready today for rec play, drills, and any casual league where USAPA approval isn't required. This first batch is priced accordingly."],
   ["What if I don't like it?", "You have 21 days to send it back for a full refund, as long as the paddle is unused and in like-new condition. If it arrived defective or it's a mistake on our end, we cover return shipping."],
   ["Is it really the same quality as a $250 paddle?", "It's built with the same core materials — a carbon-fiber and fiberglass face over a multi-density foam core. We cut the marketing budget and middleman markup, not the materials."],
   ["How does shipping work?", "Ships from the US via USPS — Ground Advantage or Priority Mail, calculated to your address at checkout."],
   ["Is there a warranty?", "Yes — a 6-month warranty against manufacturing defects. (It doesn't cover normal wear, or damage from misuse like cracking it on the ground.)"],
-  ["Why only 190?", "This is the founder's first production batch. Once it's gone, the next batch ships USAPA-certified at $115."],
+  ["Why only 190?", "This is the founder's first production batch, priced while USAPA certification is still in progress. Once it's gone, the next batch ships at $115."],
 ];
 
 export function LandingPro() {
@@ -157,7 +157,7 @@ export function LandingPro() {
         <Reveal className="mx-auto max-w-3xl rounded-2xl border border-[#1e1e1e] bg-[#0d0d0d] p-8 sm:p-10">
           <h3 className="font-display text-3xl tracking-wide text-white">&ldquo;Is it USAPA-approved?&rdquo;</h3>
           <p className="mt-4 text-lg leading-relaxed text-ink-soft">
-            Straight answer: the Longbow is built to tournament spec, and official USAPA certification is in progress — it&apos;s a paperwork-and-fee step, not a performance one. For <span className="text-white">rec play, drills, and casual league games</span>, you&apos;re good to go today. If you play in <span className="text-white">sanctioned tournaments</span>, certification is on the way — and this first batch is priced accordingly.
+            Straight answer: the Longbow is not currently USAPA-approved for sanctioned tournament play, and certification is in progress. It's ready today for <span className="text-white">rec play, drills, and casual league games</span> — anywhere <span className="text-white">USAPA approval isn't required</span> — and this first batch is priced accordingly while certification is pending.
           </p>
         </Reveal>
       </section>

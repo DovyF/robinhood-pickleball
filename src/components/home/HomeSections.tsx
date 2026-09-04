@@ -55,7 +55,7 @@ function Hero({ title, s }: { title: string; s: Record<string, unknown> }) {
       <div className="container-x relative grid min-h-[560px] items-center py-20">
         <div className="max-w-2xl animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full bg-panel/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gold-300 backdrop-blur">
-            <Award size={14} /> USAPA Approved Gear
+            <Award size={14} /> USAPA Certification In Progress
           </span>
           <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] sm:text-5xl lg:text-6xl">{title}</h1>
           {s.subtitle ? <p className="mt-5 max-w-xl text-lg text-ink-soft">{s.subtitle as string}</p> : null}
