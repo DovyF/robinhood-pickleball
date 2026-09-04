@@ -194,7 +194,7 @@ export function ProductView({ product }: ProductViewProps) {
           {/* Trust badges */}
           <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-panel p-4">
             {[
-              { icon: RotateCcw, label: "21-day money-back" },
+              { icon: RotateCcw, label: "21-day returns" },
               { icon: ShieldCheck, label: "6-month warranty" },
               { icon: Heart, label: "10% to charity" },
             ].map(({ icon: Icon, label }) => (

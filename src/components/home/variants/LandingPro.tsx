@@ -18,7 +18,7 @@ const UNITS_LEFT = 190; // first-batch inventory — wire to live stock before l
 
 const FAQS: [string, string][] = [
   ["Can I use it in tournaments?", "For rec play, drills, and casual leagues — absolutely, today. Official USAPA certification for sanctioned tournaments is in progress. This first batch is priced accordingly."],
-  ["What if I don't like it?", "You have 21 days to send it back for a full refund. If the paddle arrived defective or it's a mistake on our end, we cover return shipping."],
+  ["What if I don't like it?", "You have 21 days to send it back for a full refund, as long as the paddle is unused and in like-new condition. If it arrived defective or it's a mistake on our end, we cover return shipping."],
   ["Is it really the same quality as a $250 paddle?", "It's built with the same core materials — a carbon-fiber and fiberglass face over a multi-density foam core. We cut the marketing budget and middleman markup, not the materials."],
   ["How does shipping work?", "Ships from the US via USPS — Ground Advantage or Priority Mail, calculated to your address at checkout."],
   ["Is there a warranty?", "Yes — a 6-month warranty against manufacturing defects. (It doesn't cover normal wear, or damage from misuse like cracking it on the ground.)"],
@@ -48,7 +48,7 @@ export function LandingPro() {
         <div className="container-x grid grid-cols-2 gap-6 py-6 md:grid-cols-4">
           {[
             { Icon: Sparkles, t: `Only ${UNITS_LEFT} left`, s: "First batch" },
-            { Icon: RotateCcw, t: "21-day returns", s: "Money-back guarantee" },
+            { Icon: RotateCcw, t: "21-day returns", s: "On unused paddles" },
             { Icon: ShieldCheck, t: "6-month warranty", s: "Against defects" },
             { Icon: Heart, t: "10% donated", s: "To those in need" },
           ].map(({ Icon, t, s }) => (

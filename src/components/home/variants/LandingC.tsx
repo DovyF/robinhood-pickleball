@@ -100,7 +100,7 @@ export function LandingC() {
           <p className="max-w-xl text-ink-soft">21-day returns on unused paddles. If you&apos;re not completely satisfied with The Longbow (which is unlikely), then return it.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             {[
-              { Icon: RotateCcw, t: "21-day money-back" },
+              { Icon: RotateCcw, t: "21-day returns" },
               { Icon: ShieldCheck, t: "Secure checkout" },
               { Icon: Heart, t: "10% donated to charity" },
             ].map(({ Icon, t }) => (
