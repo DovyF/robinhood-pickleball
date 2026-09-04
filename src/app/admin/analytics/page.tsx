@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { getDashboardMetrics, getSalesSeries, getTopProducts, getDetailedTrafficSources, getFunnel, getAbandonedCarts, getCustomerLifetimeValue, getSessionMetrics, getTopPages, rangeFromParam } from "@/lib/analytics";
 import { StatCard, Card, PageHeader } from "@/components/admin/ui";
 import { SalesChart } from "@/components/admin/SalesChart";
@@ -28,9 +28,14 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     <div>
       <PageHeader title="Analytics" subtitle="Store performance" action={<DateRangePicker current={rangeParam ?? "30d"} />} />
 
-      <Link href="/admin/analytics/sessions" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
-        View every session with timestamps, device, and full timeline <ArrowRight size={14} />
-      </Link>
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <Link href="/admin/analytics/sessions" className="inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:text-gold-300 transition">
+          View every session with timestamps, device, and full timeline <ArrowRight size={14} />
+        </Link>
+        <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-ink-soft hover:text-forest-700 transition">
+          Vercel Web Analytics (visitors, referrers, devices, countries) <ExternalLink size={13} />
+        </a>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Revenue" value={formatMoney(metrics.revenue)} change={metrics.revenueChange} />
