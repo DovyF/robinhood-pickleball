@@ -38,6 +38,13 @@ export function PagesManager({ pages }: { pages: Pg[] }) {
               <option value="published">Published</option><option value="draft">Draft</option>
             </select>
           </div>
+          <div className="border-t border-cream-dark pt-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-soft">Search engine listing (SEO)</p>
+            <label className="label">Page title</label>
+            <input value={editing.seoTitle ?? ""} onChange={(e) => setEditing({ ...editing, seoTitle: e.target.value })} placeholder={editing.title} className="input" />
+            <label className="label mt-3">Meta description</label>
+            <textarea value={editing.seoDescription ?? ""} onChange={(e) => setEditing({ ...editing, seoDescription: e.target.value })} rows={2} className="input" />
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-2">
             <button onClick={() => save(editing)} disabled={pending} className="btn btn-primary">{pending ? <Loader2 className="animate-spin" size={16} /> : "Save page"}</button>
