@@ -15,7 +15,7 @@ export function Footer({ nav }: { nav: FooterNavItem[] }) {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-24 border-t border-cream-dark bg-cream text-ink-soft">
-      <div className="container-x grid gap-10 py-16 md:grid-cols-4">
+      <div className="container-x grid gap-10 py-16 md:grid-cols-5">
         <div className="md:col-span-1">
           <Logo light />
           <p className="mt-4 max-w-xs text-sm text-ink-soft">
@@ -36,6 +36,15 @@ Tournament-grade pickleball at an honest price. 10% of every sale donated to tho
             <li><Link href="/products/the-longbow" className="hover:text-white">The Longbow</Link></li>
             <li><Link href="/pages/about" className="hover:text-white">About Us</Link></li>
             <li><Link href="/pages/faq" className="hover:text-white">FAQ</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="mb-4 text-sm font-bold uppercase tracking-wide text-white">Guides</h4>
+          <ul className="space-y-2.5 text-sm">
+            <li><Link href="/pages/best-budget-pickleball-paddle" className="hover:text-white">Best Budget Paddles</Link></li>
+            <li><Link href="/pages/cheapest-pickleball-paddle" className="hover:text-white">Cheapest Paddles Worth Buying</Link></li>
+            <li><Link href="/pages/foam-pickleball-paddle-guide" className="hover:text-white">Foam vs. Polymer Cores</Link></li>
           </ul>
         </div>
 

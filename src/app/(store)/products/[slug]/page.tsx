@@ -17,13 +17,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Product not found" };
+  const title = product.seoTitle || product.title;
+  const description = product.seoDescription || product.description.slice(0, 155);
   return {
-    // Use the bare product name; the root layout template appends the brand suffix.
-    title: product.title,
-    description: product.seoDescription || product.description.slice(0, 155),
+    // seoTitle already carries the full search-facing title, so skip the root layout's brand-suffix template for this page.
+    title: { absolute: title },
+    description,
+    alternates: { canonical: `/products/${product.slug}` },
     openGraph: {
-      title: product.title,
-      description: product.seoDescription || product.description.slice(0, 155),
+      title,
+      description,
       images: product.images[0]?.url ? [product.images[0].url] : [],
     },
   };
@@ -60,9 +63,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         : undefined,
   };
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Shop", item: `${siteUrl}/products` },
+      { "@type": "ListItem", position: 3, name: product.title, item: `${siteUrl}/products/${product.slug}` },
+    ],
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <div className="container-x py-8">
         <nav className="mb-6 text-sm text-ink-soft">
           <Link href="/" className="hover:text-forest-700">Home</Link>

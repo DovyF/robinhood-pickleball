@@ -96,7 +96,7 @@ export function ProductView({ product }: ProductViewProps) {
             {product.images[activeImg] && (
               <Image
                 src={product.images[activeImg].url}
-                alt={product.images[activeImg].altText || product.title}
+                alt={product.images[activeImg].altText || `${product.title} — budget foam-core carbon fiber pickleball paddle`}
                 fill
                 priority
                 sizes="(max-width:1024px) 100vw, 50vw"
