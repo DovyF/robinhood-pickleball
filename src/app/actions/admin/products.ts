@@ -139,6 +139,7 @@ export async function saveProductAction(raw: unknown) {
 
   revalidatePath("/admin/products");
   revalidatePath(`/products/${slug}`);
+  revalidatePath("/sitemap.xml");
   return { ok: true as const, id: productId, slug };
 }
 
@@ -147,6 +148,7 @@ export async function deleteProductAction(id: string) {
   await prisma.product.delete({ where: { id } }).catch(() => {});
   await logAudit("product.delete", "product", id);
   revalidatePath("/admin/products");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 
@@ -155,6 +157,7 @@ export async function bulkUpdateStatusAction(ids: string[], status: string) {
   await prisma.product.updateMany({ where: { id: { in: ids } }, data: { status } });
   await logAudit("product.bulk_status", "product", ids.join(","), status);
   revalidatePath("/admin/products");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 

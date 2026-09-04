@@ -73,6 +73,7 @@ export async function savePageAction(input: { id?: string; title: string; slug: 
   await logAudit("page.save", "page", slug);
   revalidatePath("/admin/pages");
   revalidatePath(`/pages/${slug}`);
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 
@@ -80,6 +81,7 @@ export async function deletePageAction(id: string) {
   await assertStaff();
   await prisma.page.delete({ where: { id } }).catch(() => {});
   revalidatePath("/admin/pages");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 

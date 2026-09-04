@@ -1,6 +1,11 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
+// Safety net on top of the explicit revalidatePath("/sitemap.xml") calls in
+// the admin actions — so a new page/product never waits longer than an hour
+// to appear here even if some future mutation path forgets to revalidate it.
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const [products, collections, pages] = await Promise.all([
