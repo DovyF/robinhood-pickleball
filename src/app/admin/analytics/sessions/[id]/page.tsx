@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Eye, Package, ShoppingCart, CreditCard, CheckCircle2, Search as SearchIcon, Circle } from "lucide-react";
 import { getSessionDetail } from "@/lib/analytics";
 import { PageHeader, Card } from "@/components/admin/ui";
-import { formatDate } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
 
 const ICONS: Record<string, typeof Eye> = {
   page_view: Eye,
@@ -28,7 +28,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
       <Link href="/admin/analytics/sessions" className="mb-4 inline-flex items-center gap-1 text-sm text-ink-soft hover:text-forest-700 transition"><ArrowLeft size={15} /> Back to Sessions</Link>
       <PageHeader
         title="Session detail"
-        subtitle={`${formatDate(first.createdAt, { dateStyle: "long", timeStyle: "short" })} · ${events.length} events · ${durationSec < 60 ? `${Math.round(durationSec)}s` : `${Math.floor(durationSec / 60)}m ${Math.round(durationSec % 60)}s`} total`}
+        subtitle={<><LocalTime date={first.createdAt.toISOString()} options={{ dateStyle: "long", timeStyle: "short" }} /> · {events.length} events · {durationSec < 60 ? `${Math.round(durationSec)}s` : `${Math.floor(durationSec / 60)}m ${Math.round(durationSec % 60)}s`} total</>}
       />
 
       <Card title="Timeline">
@@ -41,7 +41,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
                   <Icon size={13} />
                 </span>
                 <p className="text-sm font-medium text-ink">{e.label}</p>
-                <p className="text-xs text-ink-soft">{formatDate(e.createdAt, { dateStyle: "medium", timeStyle: "medium" })}</p>
+                <p className="text-xs text-ink-soft"><LocalTime date={e.createdAt.toISOString()} options={{ dateStyle: "medium", timeStyle: "medium" }} /></p>
               </li>
             );
           })}

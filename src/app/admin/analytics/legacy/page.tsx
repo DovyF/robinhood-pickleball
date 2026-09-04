@@ -3,7 +3,7 @@ import { ArrowLeft, Eye, Package, ShoppingCart, CreditCard, CheckCircle2, Search
 import { getLegacyEvents, rangeFromParam } from "@/lib/analytics";
 import { PageHeader, Card, EmptyState } from "@/components/admin/ui";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
-import { formatDate } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
 
 const ICONS: Record<string, typeof Eye> = {
   page_view: Eye,
@@ -51,7 +51,7 @@ export default async function LegacyEventsPage({ searchParams }: { searchParams:
                   const Icon = ICONS[e.type] ?? Circle;
                   return (
                     <tr key={i} className="hover:bg-cream-dark/30 transition">
-                      <td className="px-4 py-3 whitespace-nowrap text-ink-soft text-xs">{formatDate(e.createdAt, { dateStyle: "medium", timeStyle: "medium" })}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-ink-soft text-xs"><LocalTime date={e.createdAt.toISOString()} options={{ dateStyle: "medium", timeStyle: "medium" }} /></td>
                       <td className="px-4 py-3"><span className="inline-flex items-center gap-2"><Icon size={14} className="text-forest-500 shrink-0" /> {e.label}</span></td>
                       <td className="px-4 py-3 text-ink-soft">{e.email ?? "—"}</td>
                     </tr>

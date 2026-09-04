@@ -3,7 +3,8 @@ import { ArrowLeft, Monitor, Smartphone, Tablet, Bot } from "lucide-react";
 import { getSessionsList, rangeFromParam } from "@/lib/analytics";
 import { PageHeader, Card, EmptyState } from "@/components/admin/ui";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
-import { formatMoney, formatDate, cn } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
+import { formatMoney, cn } from "@/lib/utils";
 
 const DEVICE_ICON = { Mobile: Smartphone, Tablet: Tablet, Desktop: Monitor } as const;
 
@@ -59,7 +60,7 @@ export default async function SessionsPage({ searchParams }: { searchParams: Pro
                     <tr key={s.sessionId} className={cn("hover:bg-cream-dark/30 transition", s.isBot && "opacity-60")}>
                       <td className="px-4 py-3">
                         <Link href={`/admin/analytics/sessions/${s.sessionId}`} className="font-medium text-forest-700 hover:text-gold-300">
-                          {formatDate(s.firstSeen, { dateStyle: "medium", timeStyle: "short" })}
+                          <LocalTime date={s.firstSeen.toISOString()} options={{ dateStyle: "medium", timeStyle: "short" }} />
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-ink-soft">{s.durationSec < 60 ? `${Math.round(s.durationSec)}s` : `${Math.floor(s.durationSec / 60)}m ${Math.round(s.durationSec % 60)}s`}</td>
