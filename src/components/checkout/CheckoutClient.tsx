@@ -231,7 +231,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
         {/* Trust block — honest reassurance right where doubt peaks */}
         <div className="mt-8 space-y-3 rounded-2xl border border-white/5 bg-panel p-4 text-sm">
           <div className="flex items-center gap-2.5 text-ink-soft"><Lock size={16} className="shrink-0 text-forest-700" /> Secure checkout, powered by Stripe</div>
-          <div className="flex items-center gap-2.5 text-ink-soft"><ShieldCheck size={16} className="shrink-0 text-forest-700" /> 21-day money-back guarantee</div>
+          <div className="flex items-center gap-2.5 text-ink-soft"><ShieldCheck size={16} className="shrink-0 text-forest-700" /> 21-day returns on unused paddles</div>
           <div className="flex items-center gap-2.5 text-ink-soft"><Heart size={16} className="shrink-0 text-forest-700" /> 10% of your order is donated to those in need</div>
         </div>
 

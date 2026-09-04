@@ -39,7 +39,7 @@ export function HeroReckoning({ unitsLeft = 190 }: { unitsLeft?: number }) {
             <Link href={PRODUCT_HREF} className="btn btn-primary text-base">
               Shop the Longbow — {PRICE.sale} <ArrowRight size={18} />
             </Link>
-            <span className="text-sm text-ink-soft">21-day money-back guarantee</span>
+            <span className="text-sm text-ink-soft">21-day returns on unused paddles</span>
           </div>
 
           <ul className="animate-hero-rise mt-9 flex flex-col gap-3 text-sm text-ink-soft sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7" style={{ animationDelay: "520ms" }}>

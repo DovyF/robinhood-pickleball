@@ -64,7 +64,7 @@ export function LandingB() {
       <section className="border-t border-[#141414] px-6 py-28 text-center">
         <h2 className="font-display text-6xl tracking-wide text-white sm:text-7xl">Your last paddle,<br /><span className="text-forest-700">for a while.</span></h2>
         <Link href={PRODUCT_HREF} className="btn btn-primary mt-10 text-base">Buy the Longbow — {PRICE.sale} <ArrowRight size={18} /></Link>
-        <p className="mt-6 text-sm text-ink-soft">21-day money-back guarantee · 10% of profits donated to those in need</p>
+        <p className="mt-6 text-sm text-ink-soft">21-day returns on unused paddles · 10% of profits donated to those in need</p>
       </section>
 
       <PreviewSwitcher current="b" />

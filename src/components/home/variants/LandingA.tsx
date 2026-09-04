@@ -86,7 +86,7 @@ export function LandingA() {
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg text-ink-soft">We cut the markup, not the materials — and 10% of every sale goes to those in need.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            {["21-day money-back guarantee", "Secure checkout", "10% donated to charity"].map((t) => (
+            {["21-day returns on unused paddles", "Secure checkout", "10% donated to charity"].map((t) => (
               <span key={t} className="inline-flex items-center gap-2 rounded-full border border-[#2e2e2e] px-4 py-2 text-sm text-ink-soft">
                 <Check size={15} className="text-forest-700" /> {t}
               </span>

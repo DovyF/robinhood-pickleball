@@ -197,7 +197,7 @@ export function LandingPro() {
             Play with it. If it&apos;s not the best-value paddle you&apos;ve held, send it back within 21 days. If anything&apos;s wrong on our end, we cover the return shipping.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {["21-day money-back guarantee", "6-month defect warranty", "10% donated to charity"].map((t) => (
+            {["21-day returns on unused paddles", "6-month defect warranty", "10% donated to charity"].map((t) => (
               <span key={t} className="inline-flex items-center gap-2 rounded-full border border-[#2e2e2e] px-4 py-2 text-sm text-ink-soft">
                 <Check size={15} className="text-forest-700" /> {t}
               </span>

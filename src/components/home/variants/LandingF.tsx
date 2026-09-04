@@ -130,7 +130,7 @@ export function LandingF() {
       <section className="border-t border-[#1e1e1e] bg-black">
         <div className="container-x flex flex-col items-center gap-8 py-16 text-center">
           <h2 className="font-display text-4xl tracking-wide text-white sm:text-5xl">Try it risk-free</h2>
-          <p className="max-w-xl text-ink-soft">21-day money-back guarantee. If you&apos;re not completely satisfied with The Longbow (which is unlikely), then return it.</p>
+          <p className="max-w-xl text-ink-soft">21-day returns on unused paddles. If you&apos;re not completely satisfied with The Longbow (which is unlikely), then return it.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             {[
               { Icon: RotateCcw, t: "21-day money-back" },
