@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card } from "@/components/admin/ui";
-import { formatDate } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
 
 export default async function LogsPage() {
   await requireAdmin();
@@ -19,7 +19,7 @@ export default async function LogsPage() {
             <tbody className="divide-y divide-cream-dark">
               {logs.map((l) => (
                 <tr key={l.id} className="hover:bg-cream-dark/30 transition">
-                  <td className="px-4 py-3 text-ink-soft">{formatDate(l.createdAt, { dateStyle: "medium", timeStyle: "short" })}</td>
+                  <td className="px-4 py-3 text-ink-soft"><LocalTime date={l.createdAt.toISOString()} options={{ dateStyle: "medium", timeStyle: "short" }} /></td>
                   <td className="px-4 py-3 text-ink">{l.user?.email ?? "system"}</td>
                   <td className="px-4 py-3"><code className="rounded bg-cream-dark px-1.5 py-0.5 text-xs text-ink">{l.action}</code></td>
                   <td className="px-4 py-3 text-ink-soft">{l.entity ?? "—"}</td>

@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/admin/ui";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import { OrderActions } from "@/components/admin/OrderActions";
-import { formatMoney, formatDate, safeJson } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
+import { formatMoney, safeJson } from "@/lib/utils";
 import { taxRateForState } from "@/lib/tax";
 import { discountLabel } from "@/lib/orders";
 import type { CheckoutAddress } from "@/lib/orders";
@@ -30,7 +31,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
             <StatusBadge status={order.paymentStatus} />
             <StatusBadge status={order.fulfillmentStatus} />
           </div>
-          <p className="text-sm text-ink-soft">{formatDate(order.createdAt, { dateStyle: "long", timeStyle: "short" })}</p>
+          <p className="text-sm text-ink-soft"><LocalTime date={order.createdAt.toISOString()} options={{ dateStyle: "long", timeStyle: "short" }} /></p>
         </div>
         <div className="text-right">
           <p className="text-xs text-ink-soft uppercase tracking-wide">Total</p>

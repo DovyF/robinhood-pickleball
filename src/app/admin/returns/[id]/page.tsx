@@ -7,7 +7,8 @@ import { Card } from "@/components/admin/ui";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import { ReturnActions } from "@/components/admin/ReturnActions";
 import { RETURN_REASON_LABELS } from "@/lib/enums";
-import { formatMoney, formatDate, safeJson } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
+import { formatMoney, safeJson } from "@/lib/utils";
 
 export default async function AdminReturnDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +31,7 @@ export default async function AdminReturnDetail({ params }: { params: Promise<{ 
             <h1 className="text-3xl font-extrabold">Return for order #{ret.order.orderNumber}</h1>
             <StatusBadge status={ret.status} />
           </div>
-          <p className="text-sm text-ink-soft">Requested {formatDate(ret.createdAt, { dateStyle: "long", timeStyle: "short" })}</p>
+          <p className="text-sm text-ink-soft">Requested <LocalTime date={ret.createdAt.toISOString()} options={{ dateStyle: "long", timeStyle: "short" }} /></p>
         </div>
         <Link href={`/admin/orders/${ret.orderId}`} className="text-sm font-semibold text-forest-700 hover:text-gold-300">View full order →</Link>
       </div>

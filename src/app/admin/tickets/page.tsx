@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader, EmptyState, Card } from "@/components/admin/ui";
 import { StatusBadge } from "@/components/account/StatusBadge";
-import { formatDate, safeJson } from "@/lib/utils";
+import { LocalTime } from "@/components/admin/LocalTime";
+import { safeJson } from "@/lib/utils";
 
 export default async function AdminTickets() {
   const tickets = await prisma.supportTicket.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
@@ -21,7 +22,7 @@ export default async function AdminTickets() {
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-bold text-ink">{t.subject}</p>
-                    <p className="text-xs text-ink-soft">{t.email} · {formatDate(t.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
+                    <p className="text-xs text-ink-soft">{t.email} · <LocalTime date={t.createdAt.toISOString()} options={{ dateStyle: "medium", timeStyle: "short" }} /></p>
                   </div>
                   <StatusBadge status={t.status} />
                 </div>
