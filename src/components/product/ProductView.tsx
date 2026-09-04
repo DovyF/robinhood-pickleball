@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { Heart, ShieldCheck, RotateCcw, Minus, Plus, Check, Truck, Lock, Sparkles } from "lucide-react";
 import { Price } from "@/components/ui/Price";
@@ -218,6 +219,16 @@ export function ProductView({ product }: ProductViewProps) {
 
           {/* Description */}
           <div className="prose prose-sm prose-invert mt-8 max-w-none whitespace-pre-line text-ink-soft [&_h2]:text-white [&_h3]:text-white" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
+
+          {/* Buying guides */}
+          <div className="mt-8 rounded-2xl border border-white/5 bg-panel p-4">
+            <p className="text-sm font-semibold text-white">New to pickleball paddles? A few honest guides:</p>
+            <ul className="mt-2 space-y-1.5 text-sm">
+              <li><Link href="/pages/best-budget-pickleball-paddle" className="text-forest-500 hover:text-gold-300">What makes a paddle "good" at a budget price</Link></li>
+              <li><Link href="/pages/foam-pickleball-paddle-guide" className="text-forest-500 hover:text-gold-300">Foam core vs. polymer core, explained</Link></li>
+              <li><Link href="/pages/cheapest-pickleball-paddle" className="text-forest-500 hover:text-gold-300">Cheapest paddle vs. best budget paddle — what's the difference</Link></li>
+            </ul>
+          </div>
         </div>
       </div>
 
