@@ -29,10 +29,15 @@ export const OrderStatus = {
 
 export const PaymentStatus = {
   PENDING: "pending",
+  // Card authorized (funds reserved) but deliberately not captured yet — used for
+  // the Shabbos hold, where no money may move into the store's account until
+  // Shabbos ends.
+  AUTHORIZED: "authorized",
   PAID: "paid",
   PARTIALLY_REFUNDED: "partially_refunded",
   REFUNDED: "refunded",
   FAILED: "failed",
+  CANCELLED: "cancelled",
 } as const;
 
 export const FulfillmentStatus = {

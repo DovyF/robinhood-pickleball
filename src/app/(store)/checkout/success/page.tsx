@@ -2,12 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Flame } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { confirmOrderAction } from "@/app/actions/checkout";
 import { formatMoney, safeJson } from "@/lib/utils";
 import type { CheckoutAddress } from "@/lib/orders";
 import { ConfirmPixel } from "@/components/checkout/ConfirmPixel";
+import { CancelOrderButton } from "@/components/checkout/CancelOrderButton";
+import { PaymentStatus } from "@/lib/enums";
 
 export const metadata: Metadata = { title: "Order Confirmed", robots: { index: false } };
 
@@ -20,15 +22,34 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
   if (!order) notFound();
 
   const ship = safeJson<CheckoutAddress | null>(order.shippingAddressJson, null);
+  const held = order.paymentStatus === PaymentStatus.AUTHORIZED;
 
   return (
     <div className="container-x max-w-2xl py-16">
-      <ConfirmPixel value={order.total} orderNumber={order.orderNumber} />
-      <div className="text-center">
-        <CheckCircle2 size={56} className="mx-auto text-forest-600" />
-        <h1 className="mt-4 text-3xl font-extrabold">Thank you, {ship?.firstName || "friend"}!</h1>
-        <p className="mt-2 text-ink-soft">Your order <strong>#{order.orderNumber}</strong> is confirmed. A receipt is on its way to {order.email}.</p>
-      </div>
+      {/* Only fire ad-conversion pixels for a real, captured payment — not a Shabbos hold that might still be cancelled. */}
+      {!held && <ConfirmPixel value={order.total} orderNumber={order.orderNumber} />}
+      {held ? (
+        <div className="text-center">
+          <Flame size={56} className="mx-auto text-amber-600" />
+          <h1 className="mt-4 text-3xl font-extrabold">Thank you, {ship?.firstName || "friend"}!</h1>
+          <p className="mt-2 text-ink-soft">
+            Your order <strong>#{order.orderNumber}</strong> is received. It&apos;s currently Shabbos, so we&apos;ve placed a hold on your card for {formatMoney(order.total)} —
+            <strong> you have not been charged</strong>. Your card will be charged and the order shipped once Shabbos ends
+            {order.captureAfter ? ` (${order.captureAfter.toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" })})` : ""}.
+          </p>
+          {order.cancelToken && (
+            <div className="mt-6 flex justify-center">
+              <CancelOrderButton orderId={order.id} token={order.cancelToken} />
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-center">
+          <CheckCircle2 size={56} className="mx-auto text-forest-600" />
+          <h1 className="mt-4 text-3xl font-extrabold">Thank you, {ship?.firstName || "friend"}!</h1>
+          <p className="mt-2 text-ink-soft">Your order <strong>#{order.orderNumber}</strong> is confirmed. A receipt is on its way to {order.email}.</p>
+        </div>
+      )}
 
       <div className="mt-10 rounded-2xl bg-panel p-6 shadow-card">
         <h2 className="mb-4 font-bold">Order summary</h2>

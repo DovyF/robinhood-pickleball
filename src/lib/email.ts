@@ -74,6 +74,24 @@ export async function sendOrderConfirmation(data: OrderEmailData) {
   return send(data.email, `Order #${data.orderNumber} confirmed`, shell("Order confirmed 🎉", body));
 }
 
+export async function sendShabbosHoldConfirmation(data: {
+  orderNumber: number;
+  email: string;
+  total: number;
+  captureAfter: Date;
+  cancelUrl: string;
+}) {
+  const when = data.captureAfter.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  const body = `
+    <p>We received your order and placed a hold on your card for <strong>${formatMoney(data.total)}</strong> — <strong>you have not been charged</strong>.</p>
+    <p style="color:#888;margin:0 0 16px">Order <strong>#${data.orderNumber}</strong></p>
+    <p>Because it's currently Shabbos, we don't process any payments or ship any orders until it ends. Your card will be charged and your order will be prepared for shipping starting <strong>${when}</strong>.</p>
+    <p>Changed your mind? You can cancel this order free of charge any time before then — no charge will ever occur if you cancel.</p>
+    <p style="text-align:center;margin:24px 0"><a href="${data.cancelUrl}" style="display:inline-block;background:#7f1d1d;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600">Cancel this order</a></p>
+    <p style="color:#888;font-size:13px">If you do nothing, your order will process automatically once Shabbos ends and ship the next business day.</p>`;
+  return send(data.email, `Order #${data.orderNumber} received — processing after Shabbos`, shell("Your order is on hold for Shabbos", body));
+}
+
 interface NewOrderAlertData extends OrderEmailData {
   phone?: string | null;
   shippingMethod?: string | null;

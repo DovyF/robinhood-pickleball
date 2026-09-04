@@ -1,13 +1,15 @@
 "use server";
 
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { getShippingRates } from "@/lib/shipping";
-import { priceCart, createPendingOrder, markOrderPaid, type CheckoutAddress } from "@/lib/orders";
+import { priceCart, createPendingOrder, markOrderPaid, markOrderAuthorized, type CheckoutAddress } from "@/lib/orders";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { AnalyticsEventType } from "@/lib/enums";
+import { AnalyticsEventType, PaymentStatus } from "@/lib/enums";
 import { currentSessionId } from "@/lib/session-tracking";
+import { isShabbosNow, getShabbosWindow } from "@/lib/shabbos";
 
 const addressSchema = z.object({
   firstName: z.string().min(1),
@@ -124,22 +126,45 @@ export async function placeOrderAction(raw: unknown) {
   }
 
   if (stripeConfigured()) {
+    const shabbosNow = await isShabbosNow();
+    const shabbosWindow = shabbosNow ? await getShabbosWindow() : null;
+
     const stripe = getStripe();
     const intent = await stripe.paymentIntents.create({
       amount: Math.round(totals.total * 100),
       currency: "usd",
       automatic_payment_methods: { enabled: true },
-      metadata: { orderId: order.id, orderNumber: String(order.orderNumber), sessionId: sessionId ?? "" },
+      capture_method: shabbosNow ? "manual" : "automatic",
+      metadata: {
+        orderId: order.id,
+        orderNumber: String(order.orderNumber),
+        sessionId: sessionId ?? "",
+        shabbosHold: shabbosNow ? "true" : "false",
+      },
       receipt_email: input.email,
     });
-    await prisma.order.update({ where: { id: order.id }, data: { stripePaymentIntentId: intent.id } });
-    return { ok: true as const, orderId: order.id, orderNumber: order.orderNumber, clientSecret: intent.client_secret, demo: false as const };
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        stripePaymentIntentId: intent.id,
+        ...(shabbosWindow ? { captureAfter: shabbosWindow.end, cancelToken: randomUUID() } : {}),
+      },
+    });
+    return {
+      ok: true as const,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      clientSecret: intent.client_secret,
+      demo: false as const,
+      shabbosHold: shabbosNow,
+      captureAfter: shabbosWindow ? shabbosWindow.end.toISOString() : null,
+    };
   }
 
   // Demo mode — no Stripe keys yet
   await markOrderPaid(order.id);
   prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PURCHASE, orderId: order.id, value: totals.total, sessionId } }).catch(() => {});
-  return { ok: true as const, orderId: order.id, orderNumber: order.orderNumber, clientSecret: null, demo: true as const };
+  return { ok: true as const, orderId: order.id, orderNumber: order.orderNumber, clientSecret: null, demo: true as const, shabbosHold: false, captureAfter: null };
 }
 
 /** Called by the success page after Stripe confirms client-side (webhook is the source of truth). */
@@ -152,7 +177,35 @@ export async function confirmOrderAction(orderId: string) {
     const pi = await stripe.paymentIntents.retrieve(order.stripePaymentIntentId);
     if (pi.status === "succeeded") {
       await markOrderPaid(order.id, pi.id, typeof pi.latest_charge === "string" ? pi.latest_charge : undefined);
+    } else if (pi.status === "requires_capture") {
+      // Card authorized (held) for Shabbos — not captured. markOrderAuthorized is idempotent.
+      await markOrderAuthorized(order.id);
     }
   }
   return { ok: true };
+}
+
+/** Public, token-protected: lets a customer cancel their own Shabbos-held order before capture. */
+export async function cancelShabbosHoldAction(orderId: string, token: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || !order.cancelToken || order.cancelToken !== token) {
+    return { ok: false as const, error: "Order not found." };
+  }
+  if (order.paymentStatus !== PaymentStatus.AUTHORIZED) {
+    return { ok: false as const, error: "This order has already been processed and can no longer be cancelled here — contact us if you need help." };
+  }
+
+  if (stripeConfigured() && order.stripePaymentIntentId) {
+    try {
+      await getStripe().paymentIntents.cancel(order.stripePaymentIntentId);
+    } catch {
+      // Already captured/cancelled on Stripe's side — fall through and sync our record.
+    }
+  }
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { status: "cancelled", paymentStatus: PaymentStatus.CANCELLED },
+  });
+  return { ok: true as const };
 }

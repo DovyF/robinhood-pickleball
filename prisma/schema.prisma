@@ -339,8 +339,13 @@ model Order {
   phone         String?
 
   status          String @default("pending")     // pending | paid | fulfilled | partially_fulfilled | cancelled | refunded
-  paymentStatus   String @default("pending")     // pending | paid | partially_refunded | refunded | failed
+  paymentStatus   String @default("pending")     // pending | authorized | paid | partially_refunded | refunded | failed | cancelled
   fulfillmentStatus String @default("unfulfilled") // unfulfilled | partially_fulfilled | fulfilled
+
+  // Shabbos hold — set when the card is authorized but capture is deliberately delayed
+  // until after Shabbos ends, so no funds move into the store's account during Shabbos.
+  captureAfter DateTime?
+  cancelToken  String?   @unique
 
   currency      String  @default("USD")
   subtotal      Float   @default(0)
@@ -540,6 +545,20 @@ model HomepageSection {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([position])
+}
+
+// Per-week manual override of calculated Shabbos start/end times (e.g. "away this
+// week, use a different zip" or "making an early Shabbos"). weekOf is normalized
+// to that week's Friday (date-only, UTC midnight) so a week has at most one row.
+model ShabbosOverride {
+  id        String   @id @default(cuid())
+  weekOf    DateTime @unique
+  startsAt  DateTime?
+  endsAt    DateTime?
+  zip       String?
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Setting {

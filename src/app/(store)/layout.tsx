@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+import { ShabbosBanner } from "@/components/layout/ShabbosBanner";
 import { Header, type NavItem } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -26,6 +27,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
     <ChromeGate
       top={
         <>
+          <ShabbosBanner />
           <AnnouncementBar text={settings.announcement ?? ""} />
           <Header nav={nav} />
         </>

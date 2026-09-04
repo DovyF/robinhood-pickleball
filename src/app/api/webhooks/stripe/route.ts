@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { markOrderPaid } from "@/lib/orders";
+import { markOrderPaid, markOrderAuthorized } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
-import { AnalyticsEventType, PaymentStatus } from "@/lib/enums";
+import { AnalyticsEventType, PaymentStatus, OrderStatus } from "@/lib/enums";
 
 // Stripe requires the raw body for signature verification.
 export async function POST(req: NextRequest) {
@@ -27,6 +27,25 @@ export async function POST(req: NextRequest) {
       if (orderId) {
         await markOrderPaid(orderId, pi.id, typeof pi.latest_charge === "string" ? pi.latest_charge : undefined);
         prisma.analyticsEvent.create({ data: { type: AnalyticsEventType.PURCHASE, orderId, value: pi.amount / 100, sessionId: pi.metadata?.sessionId || null } }).catch(() => {});
+      }
+      break;
+    }
+    case "payment_intent.amount_capturable_updated": {
+      // Card authorized (held for Shabbos), not captured yet.
+      const pi = event.data.object;
+      const orderId = pi.metadata?.orderId;
+      if (orderId) await markOrderAuthorized(orderId);
+      break;
+    }
+    case "payment_intent.canceled": {
+      // Covers cancellation from Stripe's side (e.g. dashboard) in addition to our own cancel action.
+      const pi = event.data.object;
+      const orderId = pi.metadata?.orderId;
+      if (orderId) {
+        await prisma.order.updateMany({
+          where: { id: orderId, paymentStatus: PaymentStatus.AUTHORIZED },
+          data: { status: OrderStatus.CANCELLED, paymentStatus: PaymentStatus.CANCELLED },
+        }).catch(() => {});
       }
       break;
     }

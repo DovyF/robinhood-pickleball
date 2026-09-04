@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { computeTotals, type DiscountLike } from "@/lib/pricing";
 import { DiscountType, OrderStatus, PaymentStatus, FulfillmentStatus } from "@/lib/enums";
-import { sendOrderConfirmation, sendNewOrderAlert } from "@/lib/email";
+import { sendOrderConfirmation, sendNewOrderAlert, sendShabbosHoldConfirmation } from "@/lib/email";
+import { getStripe, stripeConfigured } from "@/lib/stripe";
 
 const ORDER_START = 1001;
 
@@ -208,6 +209,58 @@ export async function markOrderPaid(orderId: string, paymentIntentId?: string, c
 }
 
 export { DiscountType };
+
+/**
+ * Card authorized (held) for Shabbos, not captured. Idempotent — safe to call
+ * from both the Stripe webhook and the checkout success-page fallback check.
+ */
+export async function markOrderAuthorized(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || order.paymentStatus === PaymentStatus.AUTHORIZED || order.paymentStatus === PaymentStatus.PAID) return;
+
+  await prisma.order.update({ where: { id: orderId }, data: { paymentStatus: PaymentStatus.AUTHORIZED } });
+
+  if (order.cancelToken && order.captureAfter) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    await sendShabbosHoldConfirmation({
+      orderNumber: order.orderNumber,
+      email: order.email,
+      total: order.total,
+      captureAfter: order.captureAfter,
+      cancelUrl: `${siteUrl}/orders/cancel/${order.id}?token=${order.cancelToken}`,
+    }).catch(() => {});
+  }
+}
+
+/**
+ * Capture every card authorization that was held for Shabbos and whose Shabbos
+ * has now ended. Used by the scheduled cron job and by the admin manual
+ * "capture now" fallback — both just call this.
+ */
+export async function captureShabbosHolds() {
+  if (!stripeConfigured()) return { captured: 0, checked: 0, errors: [] as string[] };
+
+  const due = await prisma.order.findMany({
+    where: { paymentStatus: PaymentStatus.AUTHORIZED, captureAfter: { lte: new Date() } },
+  });
+
+  const stripe = getStripe();
+  let captured = 0;
+  const errors: string[] = [];
+
+  for (const order of due) {
+    if (!order.stripePaymentIntentId) continue;
+    try {
+      const pi = await stripe.paymentIntents.capture(order.stripePaymentIntentId);
+      await markOrderPaid(order.id, pi.id, typeof pi.latest_charge === "string" ? pi.latest_charge : undefined);
+      captured++;
+    } catch (e) {
+      errors.push(`Order #${order.orderNumber}: ${(e as Error).message}`);
+    }
+  }
+
+  return { captured, checked: due.length, errors };
+}
 
 /** Human-readable label for a discount line on an order — e.g. "Discount — 10% off (SUMMER10)". */
 export function discountLabel(code: string | null | undefined, discount: { type: string; value: number } | null): string {

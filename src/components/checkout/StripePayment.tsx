@@ -10,11 +10,13 @@ export function StripePayment({
   clientSecret,
   orderId,
   email,
+  shabbosHold,
 }: {
   publishableKey: string;
   clientSecret: string;
   orderId: string;
   email: string;
+  shabbosHold?: boolean;
 }) {
   const stripePromise = loadStripe(publishableKey);
   return (
@@ -22,12 +24,12 @@ export function StripePayment({
       stripe={stripePromise}
       options={{ clientSecret, appearance: { theme: "flat", variables: { colorPrimary: "#14532d", borderRadius: "10px" } } }}
     >
-      <PaymentForm orderId={orderId} email={email} />
+      <PaymentForm orderId={orderId} email={email} shabbosHold={shabbosHold} />
     </Elements>
   );
 }
 
-function PaymentForm({ orderId, email }: { orderId: string; email: string }) {
+function PaymentForm({ orderId, email, shabbosHold }: { orderId: string; email: string; shabbosHold?: boolean }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,7 @@ function PaymentForm({ orderId, email }: { orderId: string; email: string }) {
       <PaymentElement options={{ layout: "tabs" }} />
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       <button type="submit" disabled={!stripe || loading} className="btn btn-primary mt-4 w-full disabled:opacity-50">
-        {loading ? <Loader2 className="animate-spin" size={18} /> : <><Lock size={16} /> Pay now</>}
+        {loading ? <Loader2 className="animate-spin" size={18} /> : <><Lock size={16} /> {shabbosHold ? "Authorize card" : "Pay now"}</>}
       </button>
       <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-soft">
         <Lock size={12} /> Payments are secure and encrypted

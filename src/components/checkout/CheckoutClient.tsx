@@ -29,7 +29,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
   const [step, setStep] = useState<1 | 2>(1);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
-  const [payment, setPayment] = useState<{ orderId: string; orderNumber: number; clientSecret: string | null } | null>(null);
+  const [payment, setPayment] = useState<{ orderId: string; orderNumber: number; clientSecret: string | null; shabbosHold: boolean; captureAfter: string | null } | null>(null);
 
   const canQuote = email && addr.firstName && addr.lastName && addr.line1 && addr.city && addr.state && addr.postalCode;
 
@@ -81,7 +81,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
       if (res.demo || !res.clientSecret) {
         router.push(`/checkout/success?order=${res.orderId}`);
       } else {
-        setPayment({ orderId: res.orderId, orderNumber: res.orderNumber, clientSecret: res.clientSecret });
+        setPayment({ orderId: res.orderId, orderNumber: res.orderNumber, clientSecret: res.clientSecret, shabbosHold: res.shabbosHold, captureAfter: res.captureAfter });
       }
     });
   }
@@ -179,8 +179,14 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
 
             <section>
               <h2 className="mb-3 font-display text-2xl tracking-wide text-white">Payment</h2>
+              {payment?.shabbosHold && (
+                <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
+                  🕯️ It&apos;s currently Shabbos. Your card will be authorized (a hold, not a charge) — you&apos;ll be charged and your order will ship once Shabbos ends
+                  {payment.captureAfter ? ` at ${new Date(payment.captureAfter).toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" })}` : ""}. You can cancel free anytime before then.
+                </p>
+              )}
               {payment && payment.clientSecret && stripeKey ? (
-                <StripePayment publishableKey={stripeKey} clientSecret={payment.clientSecret} orderId={payment.orderId} email={email} />
+                <StripePayment publishableKey={stripeKey} clientSecret={payment.clientSecret} orderId={payment.orderId} email={email} shabbosHold={payment.shabbosHold} />
               ) : (
                 <div className="rounded-xl border border-cream-dark bg-panel p-4">
                   {!stripeKey && (

@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/capture-shabbos-orders", "schedule": "*/15 * * * *" }
+  ]
+}
