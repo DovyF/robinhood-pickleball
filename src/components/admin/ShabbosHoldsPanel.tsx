@@ -35,7 +35,7 @@ export function ShabbosHoldsPanel({ orders }: { orders: HeldOrder[] }) {
         </p>
       )}
       {orders.length === 0 ? (
-        <EmptyState title="No held orders" subtitle="Orders placed during Shabbos will show up here until they're captured." />
+        <EmptyState title="No held orders" subtitle="Orders placed during Shabbos or Yom Tov will show up here until they're captured." />
       ) : (
         <table className="w-full text-sm">
           <thead><tr className="text-left text-xs uppercase text-ink-soft"><th className="pb-2">Order</th><th className="pb-2">Customer</th><th className="pb-2 text-right">Amount</th><th className="pb-2 text-right">Captures at</th></tr></thead>

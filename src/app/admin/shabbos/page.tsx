@@ -22,9 +22,9 @@ export default async function ShabbosAdminPage() {
 
   return (
     <div>
-      <PageHeader title="Shabbos Holds" subtitle="No payment is ever captured between candle-lighting and havdalah — cards are authorized, not charged, and captured automatically once Shabbos ends." />
+      <PageHeader title="Shabbos & Yom Tov Holds" subtitle="No payment is ever captured between candle-lighting and havdalah — for Shabbos or Yom Tov — cards are authorized, not charged, and captured automatically once it ends." />
 
-      <Card title={currentlyShabbos ? "It's currently Shabbos" : "Not currently Shabbos"} className="mb-6">
+      <Card title={currentlyShabbos ? "It's currently Shabbos/Yom Tov" : "Not currently Shabbos/Yom Tov"} className="mb-6">
         <p className="text-sm text-ink-soft">
           This week: <LocalTime date={thisWeek.start.toISOString()} options={{ weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
           {" → "}

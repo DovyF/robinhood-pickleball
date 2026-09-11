@@ -33,8 +33,8 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <Flame size={56} className="mx-auto text-amber-600" />
           <h1 className="mt-4 text-3xl font-extrabold">Thank you, {ship?.firstName || "friend"}!</h1>
           <p className="mt-2 text-ink-soft">
-            Your order <strong>#{order.orderNumber}</strong> is received. It&apos;s currently Shabbos, so we&apos;ve placed a hold on your card for {formatMoney(order.total)} —
-            <strong> you have not been charged</strong>. Your card will be charged and the order shipped once Shabbos ends
+            Your order <strong>#{order.orderNumber}</strong> is received. It&apos;s currently Shabbos/Yom Tov, so we&apos;ve placed a hold on your card for {formatMoney(order.total)} —
+            <strong> you have not been charged</strong>. Your card will be charged and the order shipped once it ends
             {order.captureAfter ? ` (${order.captureAfter.toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" })})` : ""}.
           </p>
           {order.cancelToken && (

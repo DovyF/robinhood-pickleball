@@ -1,6 +1,8 @@
-// Shabbos-aware checkout: no payment may be captured (moved into the store's
-// account) between candle-lighting and havdalah. We still let customers place
-// orders and authorize their card, we just delay the actual capture.
+// Shabbos & Yom Tov aware checkout: no payment may be captured (moved into
+// the store's account) between candle-lighting and havdalah — for the
+// regular weekly Shabbos AND for Yom Tov (including multi-day Yom Tov and a
+// Yom Tov that runs straight into an adjacent Shabbos). We still let
+// customers place orders and authorize their card, we just delay capture.
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_ZIP = "10952";
@@ -11,12 +13,15 @@ export interface ShabbosWindow {
   end: Date; // havdalah
 }
 
-/** Friday (date-only, UTC midnight) of the week containing `date`. Shabbos "belongs"
- * to its Friday for override lookups, regardless of which day of the week `date` falls on. */
+interface HolyPeriod extends ShabbosWindow {
+  label: string;
+}
+
+/** Friday (date-only, UTC midnight) of the week containing `date` — used only to key the
+ * weekly Shabbos override lookup, regardless of which day of the week `date` falls on. */
 function fridayOf(date: Date): Date {
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const day = d.getUTCDay(); // 0 = Sun, 5 = Fri, 6 = Sat
-  // Days since the most recent Friday, treating Sat/Sun as "still counts toward last week's Shabbos".
   const diff = day >= 5 ? day - 5 : day + 2;
   d.setUTCDate(d.getUTCDate() - diff);
   return d;
@@ -27,25 +32,42 @@ async function getSetting(key: string): Promise<string | null> {
   return row?.value || null;
 }
 
-async function fetchHebcalWindow(zip: string, havdalahMinutes: number, friday: Date): Promise<ShabbosWindow | null> {
-  const start = friday.toISOString().slice(0, 10);
-  const end = new Date(friday.getTime() + 2 * 86400_000).toISOString().slice(0, 10); // Sunday, inclusive end
-  const url = `https://www.hebcal.com/shabbat?cfg=json&zip=${encodeURIComponent(zip)}&m=${havdalahMinutes}&start=${start}&end=${end}`;
+/**
+ * Every candle-lighting -> havdalah span in the given range, from Hebcal's
+ * general calendar endpoint (not the Shabbat-only one) so it picks up Yom Tov
+ * too. Hebcal already emits one continuous span across a multi-day Yom Tov,
+ * and across a Yom Tov that runs straight into Shabbos — we just pair up
+ * consecutive candles/havdalah entries in order.
+ */
+async function fetchHolyPeriods(zip: string, havdalahMinutes: number, rangeStart: Date, rangeEnd: Date): Promise<HolyPeriod[]> {
+  const start = rangeStart.toISOString().slice(0, 10);
+  const end = rangeEnd.toISOString().slice(0, 10);
+  const url = `https://www.hebcal.com/hebcal?cfg=json&v=1&maj=on&c=on&geo=zip&zip=${encodeURIComponent(zip)}&m=${havdalahMinutes}&start=${start}&end=${end}`;
   try {
     const res = await fetch(url, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
+    if (!res.ok) return [];
     const data = await res.json();
-    const items: { category: string; date: string }[] = data.items ?? [];
-    const candles = items.find((i) => i.category === "candles");
-    const havdalah = items.find((i) => i.category === "havdalah");
-    if (!candles || !havdalah) return null;
-    return { start: new Date(candles.date), end: new Date(havdalah.date) };
+    const items: { category: string; date: string; title: string }[] = data.items ?? [];
+
+    const periods: HolyPeriod[] = [];
+    let pendingStart: Date | null = null;
+    let label = "";
+    for (const item of items) {
+      if (item.category === "candles" && pendingStart === null) {
+        pendingStart = new Date(item.date);
+        label = item.title;
+      } else if (item.category === "havdalah" && pendingStart !== null) {
+        periods.push({ start: pendingStart, end: new Date(item.date), label });
+        pendingStart = null;
+      }
+    }
+    return periods;
   } catch {
-    return null;
+    return [];
   }
 }
 
-/** The Shabbos window (candle lighting -> havdalah) for the week containing `reference`. */
+/** The Shabbos/Yom Tov window (candle lighting -> havdalah) covering — or nearest upcoming to — `reference`. */
 export async function getShabbosWindow(reference: Date = new Date()): Promise<ShabbosWindow> {
   const friday = fridayOf(reference);
 
@@ -53,18 +75,26 @@ export async function getShabbosWindow(reference: Date = new Date()): Promise<Sh
   const zip = override?.zip || (await getSetting("shabbos_zip")) || DEFAULT_ZIP;
   const havdalahMinutes = Number((await getSetting("shabbos_havdalah_minutes")) || DEFAULT_HAVDALAH_MINUTES);
 
-  const calculated = await fetchHebcalWindow(zip, havdalahMinutes, friday);
+  const rangeStart = new Date(reference.getTime() - 4 * 86400_000);
+  const rangeEnd = new Date(reference.getTime() + 10 * 86400_000);
+  const periods = await fetchHolyPeriods(zip, havdalahMinutes, rangeStart, rangeEnd);
+  const period = periods.find((p) => reference >= p.start && reference < p.end) ?? periods.find((p) => p.start > reference) ?? null;
 
   // Fail SAFE: if the zmanim API is unreachable and there's no override, don't
-  // assume "not Shabbos" (that could let a real Shabbos payment get captured).
-  // Use a deliberately generous fallback window instead — worse case we hold a
-  // payment a bit longer than strictly necessary, never the other way around.
+  // assume "not a holy period" (that could let a real Shabbos/Yom Tov payment
+  // get captured). Generous fallback window — worst case we hold a payment a
+  // bit longer than necessary, never the other way around.
   const fallbackStart = new Date(friday.getTime() + 20 * 3600_000); // ~4pm Eastern Friday
   const fallbackEnd = new Date(fallbackStart.getTime() + 30 * 3600_000); // generously past Saturday night
 
+  // The weekly override's custom start/end only apply when the relevant period IS
+  // this week's regular Shabbos (same Friday) — it shouldn't reach into an
+  // unrelated Yom Tov elsewhere in the fetched range.
+  const isThisWeeksShabbos = period && Math.abs(period.start.getTime() - friday.getTime()) < 3 * 86400_000;
+
   return {
-    start: override?.startsAt ?? calculated?.start ?? fallbackStart,
-    end: override?.endsAt ?? calculated?.end ?? fallbackEnd,
+    start: (isThisWeeksShabbos ? override?.startsAt : null) ?? period?.start ?? fallbackStart,
+    end: (isThisWeeksShabbos ? override?.endsAt : null) ?? period?.end ?? fallbackEnd,
   };
 }
 

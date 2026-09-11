@@ -181,7 +181,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
               <h2 className="mb-3 font-display text-2xl tracking-wide text-white">Payment</h2>
               {payment?.shabbosHold && (
                 <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
-                  🕯️ It&apos;s currently Shabbos. Your card will be authorized (a hold, not a charge) — you&apos;ll be charged and your order will ship once Shabbos ends
+                  🕯️ It&apos;s currently Shabbos/Yom Tov. Your card will be authorized (a hold, not a charge) — you&apos;ll be charged and your order will ship once it ends
                   {payment.captureAfter ? ` at ${new Date(payment.captureAfter).toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" })}` : ""}. You can cancel free anytime before then.
                 </p>
               )}

@@ -9,7 +9,7 @@ export async function ShabbosBanner() {
 
   return (
     <div className="bg-amber-900 px-4 py-2 text-center text-xs font-medium text-amber-100">
-      🕯️ It&apos;s currently Shabbos. You can still place an order — your card will be authorized, not charged, and everything processes once Shabbos ends ({endLabel}).
+      🕯️ It&apos;s currently Shabbos/Yom Tov. You can still place an order — your card will be authorized, not charged, and everything processes once it ends ({endLabel}).
     </div>
   );
 }

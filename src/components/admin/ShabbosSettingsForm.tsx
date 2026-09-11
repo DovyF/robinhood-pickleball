@@ -38,7 +38,7 @@ export function ShabbosSettingsForm({ zip, havdalahMinutes, enabled }: { zip: st
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={values.enabled} onChange={(e) => setValues((v) => ({ ...v, enabled: e.target.checked }))} />
-          Hold payments during Shabbos (turning this off captures payments immediately, even on Shabbos)
+          Hold payments during Shabbos and Yom Tov (turning this off captures payments immediately, even then)
         </label>
       </div>
       <div className="mt-4 flex items-center gap-3">
