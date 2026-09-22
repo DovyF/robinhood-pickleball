@@ -197,7 +197,7 @@ export function LandingPro() {
             Try it for 21 days.<br />Keep it for years.
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-lg text-ink-soft">
-            Play with it. If it&apos;s not the best-value paddle you&apos;ve held, send it back within 21 days. If anything&apos;s wrong on our end, we cover the return shipping.
+            If it&apos;s not the best-value paddle you&apos;ve held, send it back unused within 21 days for a full refund. If anything&apos;s wrong on our end, we cover the return shipping.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {["21-day returns on unused paddles", "6-month defect warranty", "10% donated to charity"].map((t) => (
