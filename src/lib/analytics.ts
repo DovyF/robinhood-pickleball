@@ -409,3 +409,118 @@ export async function getLegacyEvents(range: DateRange, limit = 500): Promise<Le
     return { type: e.type, createdAt: e.createdAt, label, email: order?.email ?? null };
   });
 }
+
+export interface SessionProfile {
+  source: string;
+  referrer: string | null;
+  referrerHost: string | null;
+  searchQuery: string | null;
+  searchQueryNote: string | null;
+  landingPath: string | null;
+  landingUrl: string | null;
+  utm: { source?: string; medium?: string; campaign?: string; term?: string; content?: string };
+  clickIds: { label: string; value: string }[];
+  device?: string;
+  browser?: string;
+  os?: string;
+  userAgent?: string;
+  location: string | null;
+  language?: string;
+  timezone?: string;
+  screen?: string;
+  viewport?: string;
+  isBot: boolean;
+  botName?: string;
+  pagesViewed: number;
+  exitPage: string | null;
+  email: string | null;
+}
+
+const CLICK_ID_PARAMS: Record<string, string> = {
+  gclid: "Google Ads click",
+  gbraid: "Google Ads click (iOS app)",
+  wbraid: "Google Ads click (web-to-app)",
+  srsltid: "Google Shopping / Merchant listing",
+  fbclid: "Facebook/Instagram link click",
+  igshid: "Instagram share",
+  msclkid: "Microsoft/Bing Ads click",
+  ttclid: "TikTok Ads click",
+  twclid: "X (Twitter) Ads click",
+  li_fat_id: "LinkedIn Ads click",
+  ref: "Referral tag",
+};
+
+/** Everything known about how a single session arrived and who it was (device/location), in one place. */
+export async function getSessionProfile(sessionId: string): Promise<SessionProfile | null> {
+  const events = await prisma.analyticsEvent.findMany({ where: { sessionId }, orderBy: { createdAt: "asc" } });
+  if (events.length === 0) return null;
+
+  const pageViews = events.filter((e) => e.type === "page_view");
+  const firstPv = pageViews[0] ?? events[0];
+  // The first page view carries the landing/locale/geo payload; later ones only device info.
+  const meta = pageViews.map((e) => safeJson<Record<string, string | boolean | undefined>>(e.metaJson, {})).find((m) => m.landingUrl) ?? safeJson<Record<string, string | boolean | undefined>>(firstPv.metaJson, {});
+
+  const referrer = firstPv.referrer;
+  let referrerHost: string | null = null;
+  let searchQuery: string | null = null;
+  let searchQueryNote: string | null = null;
+  if (referrer) {
+    try {
+      const u = new URL(referrer);
+      referrerHost = u.hostname;
+      const q = u.searchParams.get("q") || u.searchParams.get("p") || u.searchParams.get("query");
+      if (q) searchQuery = q;
+      else if (/google\./.test(u.hostname)) searchQueryNote = "Google hides the exact search terms from websites (since 2011, for privacy). Aggregated search terms show up in Google Search Console → Performance.";
+    } catch {}
+  }
+
+  const landingUrl = typeof meta.landingUrl === "string" ? meta.landingUrl : null;
+  const utm: SessionProfile["utm"] = {
+    source: firstPv.utmSource ?? undefined,
+    medium: firstPv.utmMedium ?? undefined,
+    campaign: firstPv.utmCampaign ?? undefined,
+  };
+  const clickIds: SessionProfile["clickIds"] = [];
+  if (landingUrl) {
+    try {
+      const params = new URL(landingUrl).searchParams;
+      utm.term = params.get("utm_term") ?? undefined;
+      utm.content = params.get("utm_content") ?? undefined;
+      for (const [key, label] of Object.entries(CLICK_ID_PARAMS)) {
+        const v = params.get(key);
+        if (v) clickIds.push({ label, value: v });
+      }
+    } catch {}
+  }
+
+  const orderIds = events.map((e) => e.orderId).filter(Boolean) as string[];
+  const order = orderIds.length ? await prisma.order.findFirst({ where: { id: { in: orderIds } }, select: { email: true } }) : null;
+
+  const locationParts = [meta.city, meta.region, meta.country].filter((x) => typeof x === "string" && x) as string[];
+
+  return {
+    source: sourceFromEvent(firstPv.utmSource, referrer),
+    referrer,
+    referrerHost,
+    searchQuery,
+    searchQueryNote,
+    landingPath: firstPv.path,
+    landingUrl,
+    utm,
+    clickIds,
+    device: meta.device as string | undefined,
+    browser: meta.browser as string | undefined,
+    os: meta.os as string | undefined,
+    userAgent: meta.userAgent as string | undefined,
+    location: locationParts.length ? locationParts.join(", ") : null,
+    language: meta.language as string | undefined,
+    timezone: meta.timezone as string | undefined,
+    screen: meta.screen as string | undefined,
+    viewport: meta.viewport as string | undefined,
+    isBot: meta.isBot === true,
+    botName: meta.botName as string | undefined,
+    pagesViewed: pageViews.length,
+    exitPage: pageViews[pageViews.length - 1]?.path ?? null,
+    email: order?.email ?? null,
+  };
+}

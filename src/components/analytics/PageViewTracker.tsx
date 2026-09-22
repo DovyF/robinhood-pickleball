@@ -24,8 +24,18 @@ export function PageViewTracker() {
   useEffect(() => {
     let sessionId = readCookie("rp_sid");
     let touch = readCookie("rp_touch");
+    let landing: Record<string, string> | undefined;
 
     if (!sessionId) {
+      // First page of a new session: capture everything the browser knows about
+      // how they arrived. Sent once per session (not stored in a cookie).
+      landing = {
+        landingUrl: window.location.href,
+        language: navigator.language || "",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+        screen: `${window.screen.width}x${window.screen.height}`,
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+      };
       sessionId = crypto.randomUUID();
       const referrer = document.referrer && new URL(document.referrer).hostname !== window.location.hostname ? document.referrer : "";
       touch = JSON.stringify({
@@ -48,6 +58,7 @@ export function PageViewTracker() {
       utmSource: utmSource || undefined,
       utmMedium: utmMedium || undefined,
       utmCampaign: utmCampaign || undefined,
+      landing,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
