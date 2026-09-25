@@ -1,0 +1,16 @@
+# Render free tier. The service sleeps after 15 minutes idle and takes
+# ~30s to wake, which the front end handles with a long first timeout.
+services:
+  - type: web
+    name: grabline
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: GRABLINE_FILE_TTL
+        value: 1800

@@ -1,0 +1,22 @@
+# fly launch --no-deploy, then fly deploy. Free allowance covers one
+# shared-cpu-1x machine; it scales to zero between downloads.
+app = "grabline"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "../Dockerfile"
+
+[env]
+  PORT = "8080"
+  GRABLINE_WORK_DIR = "/tmp"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
