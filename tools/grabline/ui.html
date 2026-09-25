@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#171512">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b4540b'/%3E%3Cpath d='M16 7v12m0 0l-5-5m5 5l5-5M9 24h14' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Grabline</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #1d1a17; --ink-soft: #574f47; --ink-faint: #8b8177;
+    --ground: #f6f3ee; --panel: #fffdfa; --sunk: #efeae1;
+    --line: #ddd6cb; --line-soft: #e9e3d9;
+    --amber: #b4540b; --amber-lift: #fdf0e2; --on-amber: #fffdfa;
+    --good: #2f6b45; --good-lift: #e6f1ea;
+    --bad: #9c2c20; --bad-lift: #fbeae7;
+    --radius: 11px;
+    --tap: 46px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #f2ede6; --ink-soft: #bdb4a8; --ink-faint: #8a8177;
+      --ground: #171512; --panel: #201d19; --sunk: #13110f;
+      --line: #37322b; --line-soft: #2a2621;
+      --amber: #f0973f; --amber-lift: #2a1f12; --on-amber: #171512;
+      --good: #7dc39a; --good-lift: #16251c;
+      --bad: #e58a7c; --bad-lift: #2a1613;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px; line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 64px; }
+  h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+  h2 { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-faint); margin: 0; }
+  p { margin: 0; }
+  a { color: var(--amber); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85em; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .brand { display: flex; align-items: baseline; gap: 9px; }
+  .brand span { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); }
+  #status {
+    font-size: 0.72rem; font-weight: 600; padding: 5px 9px; border-radius: 99px;
+    background: var(--sunk); color: var(--ink-faint); border: 1px solid var(--line-soft);
+    white-space: nowrap; cursor: pointer;
+  }
+  #status.up { background: var(--good-lift); color: var(--good); border-color: transparent; }
+  #status.down { background: var(--bad-lift); color: var(--bad); border-color: transparent; }
+  .tagline { color: var(--ink-soft); font-size: 0.88rem; margin-bottom: 18px; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1 1 130px; min-width: 0; }
+  label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-faint); }
+
+  input, select, textarea {
+    width: 100%; font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px;
+    min-height: var(--tap);
+  }
+  input[type="url"], input[inputmode="url"] { font-size: 16px; }
+  select { appearance: none; background-image: linear-gradient(45deg, transparent 49%, var(--ink-faint) 50%), linear-gradient(-45deg, transparent 49%, var(--ink-faint) 50%); background-position: calc(100% - 16px) 47%, calc(100% - 11px) 47%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
+  input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible, .chip:focus-visible {
+    outline: 2px solid var(--amber); outline-offset: 2px;
+  }
+
+  button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    border: 1px solid transparent; border-radius: 9px;
+    min-height: var(--tap); padding: 12px 16px;
+    background: var(--amber); color: var(--on-amber);
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); font-weight: 600; }
+  button.danger { background: transparent; color: var(--bad); border-color: var(--bad); font-weight: 600; }
+  button.block { width: 100%; }
+  button.big { font-size: 1.02rem; padding: 15px; }
+
+  /* chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    font-size: 0.85rem; font-weight: 600; padding: 9px 13px; min-height: 40px;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); border-radius: 99px;
+    background: var(--panel); color: var(--ink-soft); cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { background: var(--amber-lift); border-color: var(--amber); color: var(--amber); }
+
+  /* tabs */
+  .tabs { display: flex; gap: 4px; background: var(--sunk); padding: 4px; border-radius: 11px; }
+  .tabs button {
+    flex: 1; background: transparent; color: var(--ink-faint);
+    border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+    min-height: 40px; padding: 9px 6px;
+  }
+  .tabs button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+  /* media preview */
+  .media { display: flex; gap: 12px; align-items: flex-start; }
+  .media img {
+    width: 116px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px;
+    background: var(--sunk); flex: none; max-width: 40%;
+  }
+  .media .meta { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .media .t { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .media .d { font-size: 0.8rem; color: var(--ink-faint); overflow-wrap: anywhere; }
+  .pill {
+    display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+    background: var(--sunk); color: var(--ink-faint);
+  }
+
+  /* progress */
+  .bar { height: 8px; border-radius: 99px; background: var(--sunk); overflow: hidden; }
+  .bar div { height: 100%; background: var(--amber); width: 0; transition: width .3s ease; }
+  .bar.indet div { width: 35%; animation: slide 1.3s ease-in-out infinite; }
+  @keyframes slide { 0% { margin-left: -35%; } 100% { margin-left: 100%; } }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* results */
+  a.grab {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none; text-align: center; font-weight: 700;
+    min-height: 52px; padding: 14px; border-radius: 9px;
+    background: var(--amber); color: var(--on-amber);
+  }
+  a.grab.alt { background: var(--amber-lift); color: var(--amber); border: 1px solid var(--amber); }
+  .filelist { display: flex; flex-direction: column; gap: 7px; }
+
+  /* formats table */
+  .fmt { max-height: 290px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+  .fmt button {
+    background: var(--panel); border: 1px solid var(--line-soft); color: var(--ink);
+    font-weight: 500; font-size: 0.85rem; text-align: left;
+    padding: 10px 12px; min-height: 42px; display: flex; justify-content: space-between; gap: 10px;
+  }
+  .fmt button[aria-pressed="true"] { border-color: var(--amber); background: var(--amber-lift); color: var(--amber); font-weight: 700; }
+  .fmt button code { color: var(--ink-faint); flex: none; }
+  .fmt button[aria-pressed="true"] code { color: var(--amber); }
+
+  details { border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); }
+  details > summary {
+    cursor: pointer; list-style: none; padding: 13px 14px; min-height: var(--tap);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft);
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "+"; font-size: 1.1rem; color: var(--ink-faint); }
+  details[open] > summary::after { content: "–"; }
+  .dbody { padding: 0 14px 15px; display: flex; flex-direction: column; gap: 13px; }
+
+  .check { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--ink);
+           min-height: 38px; font-weight: 500; text-transform: none; letter-spacing: normal;
+           line-height: 1.35; cursor: pointer; }
+  .check input { width: 20px; height: 20px; min-height: 20px; flex: none; accent-color: var(--amber); }
+
+  .msg { border-radius: 9px; padding: 12px; font-size: 0.88rem; }
+  .msg.err { background: var(--bad-lift); color: var(--bad); }
+  .msg.info { background: var(--sunk); color: var(--ink-soft); }
+  .hint { font-size: 0.79rem; color: var(--ink-faint); line-height: 1.5; }
+
+  .jobrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line-soft); }
+  .jobrow:first-child { border-top: none; }
+  .jobrow .n { flex: 1; min-width: 0; font-size: 0.85rem; overflow-wrap: anywhere; }
+  .jobrow a { font-size: 0.82rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap stack">
+
+  <div>
+    <header>
+      <div class="brand"><h1>Grabline</h1><span>your server</span></div>
+      <button id="status" class="ghost" type="button" title="Tap to re-check">checking…</button>
+    </header>
+    <p class="tagline">Paste a link from just about anywhere. Pick a quality. Get the file.</p>
+  </div>
+
+  <!-- URL -->
+  <div class="card">
+    <div class="field">
+      <label for="url">Link</label>
+      <input id="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off"
+             spellcheck="false" placeholder="https://…">
+    </div>
+    <div class="row">
+      <button id="inspect" class="block" style="flex:2 1 180px" type="button">Inspect link</button>
+      <button id="paste" class="ghost" style="flex:1 1 90px" type="button">Paste</button>
+    </div>
+    <p class="hint">Inspect lists every quality the site offers. Or skip it and just hit Download below.</p>
+  </div>
+
+  <div id="msg" hidden></div>
+
+  <!-- what we found -->
+  <div id="preview" class="card" hidden>
+    <div class="media">
+      <img id="pv-thumb" alt="" hidden>
+      <div class="meta">
+        <span class="pill" id="pv-site">—</span>
+        <p class="t" id="pv-title">—</p>
+        <p class="d" id="pv-detail">—</p>
+      </div>
+    </div>
+    <div id="pv-playlist" class="msg info" hidden></div>
+  </div>
+
+  <!-- options -->
+  <div class="stack">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-video" aria-selected="true">Video</button>
+      <button type="button" role="tab" id="tab-audio" aria-selected="false">Audio only</button>
+    </div>
+
+    <!-- video -->
+    <div class="card" id="pane-video">
+      <div>
+        <h2>Quality</h2>
+        <div class="chips" id="qchips" style="margin-top:8px">
+          <button class="chip" type="button" data-q="max">Best there is</button>
+          <button class="chip" type="button" data-q="2160">4K</button>
+          <button class="chip" type="button" data-q="1440">1440p</button>
+          <button class="chip" type="button" data-q="1080" aria-pressed="true">1080p</button>
+          <button class="chip" type="button" data-q="720">720p</button>
+          <button class="chip" type="button" data-q="480">480p</button>
+          <button class="chip" type="button" data-q="360">360p</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="container">Save as</label>
+          <select id="container">
+            <option value="mp4" selected>mp4 — plays everywhere</option>
+            <option value="mkv">mkv — keeps everything</option>
+            <option value="webm">webm</option>
+            <option value="original">leave as downloaded</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vmode">Audio track</label>
+          <select id="vmode">
+            <option value="video" selected>Keep audio</option>
+            <option value="mute">Silent video</option>
+          </select>
+        </div>
+      </div>
+      <div id="fmt-wrap" hidden>
+        <h2>Or pick an exact stream</h2>
+        <div class="fmt" id="fmt" style="margin-top:8px"></div>
+        <p class="hint" style="margin-top:8px">“video only” streams get merged with the best audio automatically.</p>
+      </div>
+    </div>
+
+    <!-- audio -->
+    <div class="card" id="pane-audio" hidden>
+      <div>
+        <h2>Format</h2>
+        <div class="chips" id="achips" style="margin-top:8px">
+          <button class="chip" type="button" data-a="mp3" aria-pressed="true">MP3</button>
+          <button class="chip" type="button" data-a="m4a">M4A</button>
+          <button class="chip" type="button" data-a="opus">Opus</button>
+          <button class="chip" type="button" data-a="flac">FLAC</button>
+          <button class="chip" type="button" data-a="wav">WAV</button>
+          <button class="chip" type="button" data-a="best">Untouched</button>
+        </div>
+      </div>
+      <div class="field" id="abr-field">
+        <label for="abr">Bitrate</label>
+        <select id="abr">
+          <option value="320">320 kbps</option>
+          <option value="256">256 kbps</option>
+          <option value="192" selected>192 kbps</option>
+          <option value="128">128 kbps</option>
+        </select>
+      </div>
+      <p class="hint">FLAC and WAV are lossless, so bitrate doesn’t apply. “Untouched” keeps the site’s own audio file with no conversion.</p>
+    </div>
+
+    <!-- extras -->
+    <details>
+      <summary>Extras</summary>
+      <div class="dbody">
+        <label class="check"><input type="checkbox" id="x-meta" checked> Write title, artist and chapters into the file</label>
+        <label class="check"><input type="checkbox" id="x-thumb"> Embed the thumbnail as cover art</label>
+        <label class="check"><input type="checkbox" id="x-subs"> Burn subtitles into the video track</label>
+        <label class="check"><input type="checkbox" id="x-subfiles"> Save subtitles as separate .srt files</label>
+        <div class="field">
+          <label for="sublangs">Subtitle languages</label>
+          <input id="sublangs" type="text" value="en" placeholder="en,es,de" autocapitalize="off" spellcheck="false">
+        </div>
+        <label class="check"><input type="checkbox" id="x-sponsor"> Cut sponsor segments (SponsorBlock)</label>
+        <hr style="border:none;border-top:1px solid var(--line-soft);margin:0">
+        <div class="row">
+          <div class="field">
+            <label for="t-start">Trim from</label>
+            <input id="t-start" type="text" inputmode="numeric" placeholder="1:30" autocapitalize="off">
+          </div>
+          <div class="field">
+            <label for="t-end">Trim to</label>
+            <input id="t-end" type="text" inputmode="numeric" placeholder="4:05" autocapitalize="off">
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--line-soft);margin:0">
+        <label class="check"><input type="checkbox" id="x-playlist"> Grab the whole playlist or channel</label>
+        <div class="field">
+          <label for="pl-items">Which items</label>
+          <input id="pl-items" type="text" placeholder="all · or 1-5,9,12-" autocapitalize="off" spellcheck="false">
+        </div>
+        <p class="hint">Playlists download one after another and arrive as a list of separate files.</p>
+      </div>
+    </details>
+
+    <button id="go" class="block big" type="button">Download</button>
+  </div>
+
+  <!-- live job -->
+  <div id="job" class="card" hidden>
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+      <h2 id="job-state">Working</h2>
+      <button id="cancel" class="danger" type="button" style="min-height:36px;padding:7px 12px;font-size:0.8rem">Stop</button>
+    </div>
+    <div class="bar" id="job-bar"><div></div></div>
+    <div class="stats">
+      <span id="job-pct">—</span><span id="job-size"></span><span id="job-speed"></span><span id="job-eta"></span>
+    </div>
+    <p class="hint" id="job-note"></p>
+  </div>
+
+  <!-- result -->
+  <div id="result" class="card" hidden>
+    <h2 style="color:var(--good)">Ready</h2>
+    <p class="t" id="res-title" style="font-weight:700"></p>
+    <div class="filelist" id="res-files"></div>
+    <p class="hint" id="res-note"></p>
+  </div>
+
+  <!-- history -->
+  <details id="hist-wrap" hidden>
+    <summary>This session</summary>
+    <div class="dbody"><div id="hist"></div></div>
+  </details>
+
+  <!-- site check -->
+  <details>
+    <summary>Which sites work</summary>
+    <div class="dbody">
+      <div class="field">
+        <label for="sitesearch">Search the supported list</label>
+        <input id="sitesearch" type="search" placeholder="vimeo, reddit, twitch…" autocapitalize="off" spellcheck="false">
+      </div>
+      <div id="siteout" class="hint"></div>
+    </div>
+  </details>
+
+  <!-- server -->
+  <details id="srv-wrap">
+    <summary>Server</summary>
+    <div class="dbody">
+      <p class="hint" id="srv-info">—</p>
+      <div class="field">
+        <label for="apikey">API key — only if you set one</label>
+        <input id="apikey" type="password" autocomplete="off" placeholder="not needed by default">
+      </div>
+      <div class="row">
+        <button class="ghost" id="savekey" type="button">Save key</button>
+        <button class="ghost" id="recheck" type="button">Re-check server</button>
+      </div>
+      <p class="hint">This page is served by your own Grabline server, so it talks to it directly — nothing you paste here reaches anyone else.</p>
+    </div>
+  </details>
+
+  <p class="hint" style="text-align:center">
+    Your own recordings, Creative Commons and public-domain material are fair game.
+    Paid or DRM-protected catalogues are not, and most sites’ terms forbid ripping them.
+  </p>
+
+</div>
+
+<script>
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var KEY_LS = "grabline.key";
+var apiKey = "";
+try { apiKey = localStorage.getItem(KEY_LS) || ""; } catch (e) {}
+if (apiKey) $("apikey").value = apiKey;
+
+var state = { mode: "video", quality: "1080", audio: "mp3", formatId: null, poll: null, jobId: null, probe: null };
+
+/* ---------------- api ---------------- */
+function api(path, options) {
+  var opts = options || {};
+  var headers = opts.headers || {};
+  headers["Accept"] = "application/json";
+  if (opts.body) headers["Content-Type"] = "application/json";
+  if (apiKey) headers["Authorization"] = "Api-Key " + apiKey;
+  return fetch(path, { method: opts.method || "GET", headers: headers, body: opts.body })
+    .then(function (res) {
+      return res.text().then(function (text) {
+        var data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) {}
+        if (!res.ok) {
+          var detail = (data && (data.error || data.detail)) || ("server returned " + res.status);
+          if (typeof detail !== "string") detail = JSON.stringify(detail);
+          var err = new Error(detail);
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      });
+    });
+}
+
+/* ---------------- messages ---------------- */
+function say(kind, text) {
+  var box = $("msg");
+  box.className = "msg " + kind;
+  box.textContent = text;
+  box.hidden = false;
+}
+function hush() { $("msg").hidden = true; }
+
+/* ---------------- server health ---------------- */
+function checkHealth() {
+  var chip = $("status");
+  chip.className = "ghost";
+  chip.textContent = "checking…";
+  api("/health")
+    .then(function (h) {
+      chip.className = "up";
+      chip.textContent = h.ffmpeg_present ? "ready" : "no ffmpeg";
+      return api("/api").then(function (a) {
+        $("srv-info").textContent =
+          "yt-dlp " + h.yt_dlp + " · " + a.supported_sites + " sites · ffmpeg " +
+          (h.ffmpeg_present ? "present" : "MISSING") +
+          (h.cookies_loaded ? " · cookies loaded" : "");
+        if (!h.ffmpeg_present) {
+          say("err", "ffmpeg is missing on the server, so merging high-quality video and converting audio will fail. Install it and restart.");
+        }
+      }).catch(function () {});
+    })
+    .catch(function (err) {
+      chip.className = "down";
+      if (err.status === 401) {
+        chip.textContent = "key needed";
+        $("srv-wrap").open = true;
+        say("err", "This server wants an API key. Add it under Server.");
+      } else {
+        chip.textContent = "offline";
+        say("err", "Can't reach the server that served this page. If it's on a free host it may have gone to sleep — wait about thirty seconds and tap the status chip.");
+      }
+    });
+}
+
+/* ---------------- tabs and chips ---------------- */
+function setMode(mode) {
+  state.mode = mode;
+  var video = mode === "video";
+  $("tab-video").setAttribute("aria-selected", String(video));
+  $("tab-audio").setAttribute("aria-selected", String(!video));
+  $("pane-video").hidden = !video;
+  $("pane-audio").hidden = video;
+}
+$("tab-video").addEventListener("click", function () { setMode("video"); });
+$("tab-audio").addEventListener("click", function () { setMode("audio"); });
+
+function wireChips(containerId, attr, onPick) {
+  $(containerId).addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".chip");
+    if (!btn) return;
+    Array.prototype.forEach.call(this.querySelectorAll(".chip"), function (c) {
+      c.setAttribute("aria-pressed", String(c === btn));
+    });
+    onPick(btn.getAttribute(attr));
+  });
+}
+wireChips("qchips", "data-q", function (q) {
+  state.quality = q;
+  state.formatId = null;
+  paintFormats();
+});
+wireChips("achips", "data-a", function (a) {
+  state.audio = a;
+  $("abr-field").hidden = (a === "wav" || a === "flac" || a === "best");
+});
+
+/* ---------------- paste ---------------- */
+$("paste").addEventListener("click", function () {
+  if (!navigator.clipboard || !navigator.clipboard.readText) {
+    say("info", "Your browser won't let a page read the clipboard. Long-press the link box and paste.");
+    return;
+  }
+  navigator.clipboard.readText().then(function (text) {
+    if (text) { $("url").value = text.trim(); hush(); }
+  }).catch(function () {
+    say("info", "Clipboard read was refused. Long-press the link box and paste.");
+  });
+});
+
+/* ---------------- inspect ---------------- */
+function fmtDuration(seconds) {
+  if (!seconds) return null;
+  var s = Math.round(seconds), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  var pad = function (n) { return n < 10 ? "0" + n : String(n); };
+  return h ? h + ":" + pad(m) + ":" + pad(sec) : m + ":" + pad(sec);
+}
+
+function paintFormats() {
+  var probe = state.probe;
+  var wrap = $("fmt-wrap"), list = $("fmt");
+  if (!probe || probe.kind !== "video" || !probe.formats || !probe.formats.length) {
+    wrap.hidden = true;
+    return;
+  }
+  list.textContent = "";
+  probe.formats.forEach(function (f) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(state.formatId === f.format_id));
+    var span = document.createElement("span");
+    span.textContent = f.label;
+    var tag = document.createElement("code");
+    tag.textContent = f.format_id;
+    b.appendChild(span);
+    b.appendChild(tag);
+    b.addEventListener("click", function () {
+      state.formatId = (state.formatId === f.format_id) ? null : f.format_id;
+      paintFormats();
+    });
+    list.appendChild(b);
+  });
+  wrap.hidden = false;
+}
+
+$("inspect").addEventListener("click", function () {
+  var url = $("url").value.trim();
+  if (!url) { say("err", "Paste a link first."); return; }
+  hush();
+  $("inspect").disabled = true;
+  $("inspect").textContent = "Looking…";
+  $("preview").hidden = true;
+  state.probe = null;
+  state.formatId = null;
+
+  api("/probe", { method: "POST", body: JSON.stringify({ url: url }) })
+    .then(function (info) {
+      state.probe = info;
+      $("pv-site").textContent = info.extractor || "site";
+      $("pv-title").textContent = info.title || "(untitled)";
+      var thumb = $("pv-thumb");
+      if (info.thumbnail) { thumb.src = info.thumbnail; thumb.hidden = false; }
+      else { thumb.hidden = true; }
+
+      if (info.kind === "playlist") {
+        $("pv-detail").textContent = (info.count || info.entries.length) + " items" +
+          (info.uploader ? " · " + info.uploader : "");
+        $("pv-playlist").textContent = "This link is a playlist. Tick “Grab the whole playlist” under Extras to take all of it, or Grabline will just take the first item.";
+        $("pv-playlist").hidden = false;
+        $("fmt-wrap").hidden = true;
+      } else {
+        var bits = [];
+        if (info.duration) bits.push(fmtDuration(info.duration));
+        if (info.uploader) bits.push(info.uploader);
+        if (info.is_live) bits.push("LIVE");
+        if (info.subtitles && info.subtitles.length) bits.push(info.subtitles.length + " subtitle tracks");
+        $("pv-detail").textContent = bits.join(" · ") || "—";
+        $("pv-playlist").hidden = true;
+        paintFormats();
+        if (info.subtitles && info.subtitles.length) {
+          $("sublangs").value = info.subtitles.slice(0, 3).join(",");
+        }
+      }
+      $("preview").hidden = false;
+    })
+    .catch(function (err) { say("err", err.message); })
+    .then(function () {
+      $("inspect").disabled = false;
+      $("inspect").textContent = "Inspect link";
+    });
+});
+
+/* ---------------- download ---------------- */
+function humanSize(n) {
+  if (!n) return "";
+  var units = ["B", "KB", "MB", "GB", "TB"], i = 0, v = n;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return (i === 0 ? v.toFixed(0) : v.toFixed(1)) + " " + units[i];
+}
+
+$("go").addEventListener("click", function () {
+  var url = $("url").value.trim();
+  if (!url) { say("err", "Paste a link first."); return; }
+  hush();
+  $("result").hidden = true;
+
+  var body = {
+    url: url,
+    mode: state.mode === "audio" ? "audio" : $("vmode").value,
+    quality: state.quality,
+    format_id: state.mode === "video" ? state.formatId : null,
+    container: $("container").value,
+    audio_format: state.audio,
+    audio_quality: $("abr").value,
+    embed_subs: $("x-subs").checked,
+    write_subs: $("x-subfiles").checked,
+    subtitle_langs: $("sublangs").value || "en",
+    embed_thumbnail: $("x-thumb").checked,
+    embed_metadata: $("x-meta").checked,
+    sponsorblock: $("x-sponsor").checked,
+    playlist: $("x-playlist").checked,
+    playlist_items: $("pl-items").value.trim() || null,
+    start_time: $("t-start").value.trim() || null,
+    end_time: $("t-end").value.trim() || null
+  };
+
+  $("go").disabled = true;
+  $("go").textContent = "Starting…";
+
+  api("/jobs", { method: "POST", body: JSON.stringify(body) })
+    .then(function (res) {
+      state.jobId = res.job_id;
+      showJob({ state: "queued" });
+      watch(res.job_id);
+    })
+    .catch(function (err) {
+      say("err", err.message);
+      $("go").disabled = false;
+      $("go").textContent = "Download";
+    });
+});
+
+var STATE_WORDS = {
+  queued: "Queued", resolving: "Reading the page", downloading: "Downloading",
+  processing: "Converting", done: "Ready", error: "Failed", cancelled: "Stopped"
+};
+
+function showJob(job) {
+  $("job").hidden = false;
+  $("job-state").textContent = STATE_WORDS[job.state] || job.state;
+  var bar = $("job-bar");
+  var indeterminate = (job.state === "queued" || job.state === "resolving" ||
+                       (job.state === "downloading" && job.progress == null) ||
+                       job.state === "processing");
+  bar.classList.toggle("indet", indeterminate);
+  bar.firstElementChild.style.width = indeterminate ? "" : ((job.progress || 0) + "%");
+  $("job-pct").textContent = job.progress != null ? job.progress.toFixed(1) + "%" : "";
+  $("job-size").textContent = job.total_bytes
+    ? humanSize(job.downloaded_bytes) + " / " + humanSize(job.total_bytes) : "";
+  $("job-speed").textContent = job.speed ? humanSize(job.speed) + "/s" : "";
+  $("job-eta").textContent = job.eta ? job.eta + "s left" : "";
+  var note = "";
+  if (job.state === "processing") note = "ffmpeg is merging and converting. No progress figure for this part.";
+  if (job.state === "resolving") note = "Asking the site what it has.";
+  if (job.fragment_count) note = "Fragment " + (job.fragment_index || 0) + " of " + job.fragment_count + ".";
+  $("job-note").textContent = note;
+}
+
+function watch(jobId) {
+  clearInterval(state.poll);
+  state.poll = setInterval(function () {
+    api("/jobs/" + jobId)
+      .then(function (job) {
+        showJob(job);
+        if (job.state === "done") { finish(job); }
+        else if (job.state === "error" || job.state === "cancelled") {
+          clearInterval(state.poll);
+          $("job").hidden = true;
+          $("go").disabled = false;
+          $("go").textContent = "Download";
+          if (job.state === "error") say("err", explain(job.error));
+        }
+      })
+      .catch(function (err) {
+        clearInterval(state.poll);
+        $("job").hidden = true;
+        $("go").disabled = false;
+        $("go").textContent = "Download";
+        say("err", "Lost contact with the server: " + err.message);
+      });
+  }, 1000);
+}
+
+function explain(message) {
+  var m = (message || "").toLowerCase();
+  if (m.indexOf("sign in") >= 0 || m.indexOf("bot") >= 0 || m.indexOf("cookies") >= 0) {
+    return message + "  —  this site wants a logged-in browser. Export a cookies.txt and point GRABLINE_COOKIES_FILE at it, or run the server on your home connection instead of a datacentre one.";
+  }
+  if (m.indexOf("ffmpeg") >= 0) {
+    return message + "  —  install ffmpeg on the server and restart it.";
+  }
+  if (m.indexOf("unsupported url") >= 0) {
+    return "No extractor matched that link. Check it under “Which sites work”, or paste the page URL rather than a share redirect.";
+  }
+  if (m.indexOf("private") >= 0 || m.indexOf("unavailable") >= 0) {
+    return message + "  —  private, removed, or blocked in the server's region.";
+  }
+  return message;
+}
+
+function finish(job) {
+  clearInterval(state.poll);
+  $("job").hidden = true;
+  $("go").disabled = false;
+  $("go").textContent = "Download";
+  $("res-title").textContent = job.title || "Your file";
+
+  var box = $("res-files");
+  box.textContent = "";
+  var files = job.files || [];
+  files.forEach(function (f, i) {
+    var a = document.createElement("a");
+    a.className = "grab" + (i === 0 ? "" : " alt");
+    a.href = f.url;
+    a.setAttribute("download", f.name);
+    a.textContent = (files.length > 1 ? f.name : "Save the file") +
+      (f.size_human ? "  ·  " + f.size_human : "");
+    box.appendChild(a);
+  });
+  $("res-note").textContent = files.length > 1
+    ? files.length + " files. Tap each one to save it."
+    : "Saved to wherever your browser puts downloads. The server deletes its copy after an hour.";
+  $("result").hidden = false;
+  remember(job);
+}
+
+$("cancel").addEventListener("click", function () {
+  if (!state.jobId) return;
+  api("/jobs/" + state.jobId, { method: "DELETE" }).catch(function () {});
+});
+
+/* ---------------- session history ---------------- */
+var recent = [];
+function remember(job) {
+  recent.unshift({ id: job.id, title: job.title || job.id, files: job.files || [] });
+  recent = recent.slice(0, 12);
+  var box = $("hist");
+  box.textContent = "";
+  recent.forEach(function (h) {
+    var row = document.createElement("div");
+    row.className = "jobrow";
+    var name = document.createElement("span");
+    name.className = "n";
+    name.textContent = h.title;
+    var link = document.createElement("a");
+    link.href = (h.files[0] && h.files[0].url) || ("/files/" + h.id);
+    link.setAttribute("download", "");
+    link.textContent = "Save again";
+    row.appendChild(name);
+    row.appendChild(link);
+    box.appendChild(row);
+  });
+  $("hist-wrap").hidden = false;
+}
+
+/* ---------------- site search ---------------- */
+var siteTimer = null;
+$("sitesearch").addEventListener("input", function () {
+  var q = this.value.trim();
+  clearTimeout(siteTimer);
+  siteTimer = setTimeout(function () {
+    api("/extractors?q=" + encodeURIComponent(q) + "&limit=80")
+      .then(function (r) {
+        if (!q) { $("siteout").textContent = r.total + " sites supported. Type to search."; return; }
+        $("siteout").textContent = r.matched
+          ? r.matched + " match: " + r.extractors.join(", ")
+          : "Nothing matches “" + q + "”. Many sites still work through the generic extractor, so it's worth trying the link anyway.";
+      })
+      .catch(function (err) { $("siteout").textContent = err.message; });
+  }, 250);
+});
+
+/* ---------------- server pane ---------------- */
+$("savekey").addEventListener("click", function () {
+  apiKey = $("apikey").value.trim();
+  try { apiKey ? localStorage.setItem(KEY_LS, apiKey) : localStorage.removeItem(KEY_LS); } catch (e) {}
+  hush();
+  checkHealth();
+});
+$("recheck").addEventListener("click", checkHealth);
+$("status").addEventListener("click", checkHealth);
+
+$("url").addEventListener("keydown", function (ev) {
+  if (ev.key === "Enter") { ev.preventDefault(); $("inspect").click(); }
+});
+
+checkHealth();
+api("/extractors?q=&limit=0").then(function (r) {
+  $("siteout").textContent = r.total + " sites supported. Type to search.";
+}).catch(function () {});
+</script>
+</body>
+</html>
