@@ -49,7 +49,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       <thead><tr><th>Item</th><th>SKU</th><th style="text-align:center">Qty</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <p class="muted" style="margin-top:32px">Thank you for playing with ${store}! Questions? hello@robinhoodpickleball.com</p>
+    <p class="muted" style="margin-top:32px">Thank you for playing with ${store}! Questions? robinhoodpickleball@gmail.com</p>
     <button class="noprint" onclick="window.print()" style="margin-top:16px;padding:10px 18px;border-radius:8px;background:#14532d;color:#fff;border:none;cursor:pointer">Print</button>
   </body></html>`;
 

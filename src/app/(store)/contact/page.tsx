@@ -18,7 +18,7 @@ export default function ContactPage() {
       <div className="mx-auto mt-12 grid max-w-4xl gap-10 md:grid-cols-[1fr_1.3fr]">
         <div className="space-y-6">
           {[
-            { icon: Mail, title: "Email", value: "hello@robinhoodpickleball.com" },
+            { icon: Mail, title: "Email", value: "robinhoodpickleball@gmail.com" },
             { icon: Clock, title: "Hours", value: "Mon–Fri, 9am–5pm ET" },
             { icon: MapPin, title: "Ships from", value: "United States" },
           ].map((c) => (
