@@ -47,6 +47,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
+    // Searchers write the brand both as one word and two ("Robin Hood Longbow"),
+    // so both are declared here to point at the same product entity.
+    alternateName: ["Robinhood Longbow", "Robin Hood Longbow", "Longbow Pickleball Paddle"],
+    brand: { "@type": "Brand", name: "Robinhood Pickleball" },
     description: product.description,
     image: product.images.map((i) => i.url),
     offers: {

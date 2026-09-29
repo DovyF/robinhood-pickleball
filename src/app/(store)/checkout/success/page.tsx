@@ -10,6 +10,7 @@ import type { CheckoutAddress } from "@/lib/orders";
 import { ConfirmPixel } from "@/components/checkout/ConfirmPixel";
 import { CancelOrderButton } from "@/components/checkout/CancelOrderButton";
 import { PaymentStatus } from "@/lib/enums";
+import { LocalTime } from "@/components/admin/LocalTime";
 
 export const metadata: Metadata = { title: "Order Confirmed", robots: { index: false } };
 
@@ -35,7 +36,16 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <p className="mt-2 text-ink-soft">
             Your order <strong>#{order.orderNumber}</strong> is received. It&apos;s currently Shabbos/Yom Tov, so we&apos;ve placed a hold on your card for {formatMoney(order.total)} —
             <strong> you have not been charged</strong>. Your card will be charged and the order shipped once it ends
-            {order.captureAfter ? ` (${order.captureAfter.toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" })})` : ""}.
+            {order.captureAfter ? (
+              <>
+                {" ("}
+                <LocalTime date={order.captureAfter.toISOString()} options={{ weekday: "long", hour: "numeric", minute: "2-digit" }} />
+                {")"}
+              </>
+            ) : (
+              ""
+            )}
+            .
           </p>
           {order.cancelToken && (
             <div className="mt-6 flex justify-center">

@@ -40,7 +40,11 @@ export const metadata: Metadata = {
     "pickleball paddle under $100",
     "carbon fiber pickleball paddle",
     "the longbow",
+    "longbow pickleball paddle",
+    "robinhood longbow",
+    "robin hood longbow",
     "robinhood pickleball",
+    "robin hood pickleball",
   ],
   openGraph: {
     type: "website",
@@ -60,6 +64,9 @@ const organizationLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Robinhood Pickleball",
+  // Searchers split the brand both ways ("Robin Hood Longbow" as often as
+  // "Robinhood Longbow"), so both spellings are declared as the same entity.
+  alternateName: ["Robin Hood Pickleball", "Robinhood", "Robin Hood Pickleball Paddles"],
   url: siteUrl,
   logo: `${siteUrl}/brand/logo-square.png`,
 };

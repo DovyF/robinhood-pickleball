@@ -81,7 +81,18 @@ export async function sendShabbosHoldConfirmation(data: {
   captureAfter: Date;
   cancelUrl: string;
 }) {
-  const when = data.captureAfter.toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  // Emails have no viewer browser to read a timezone from, so pin to the store's own
+  // zone (candle-lighting/havdalah are computed for the Shabbos-settings ZIP, Eastern
+  // time) rather than letting it default to the server's UTC clock.
+  const when = data.captureAfter.toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+    timeZone: "America/New_York",
+  });
   const body = `
     <p>We received your order and placed a hold on your card for <strong>${formatMoney(data.total)}</strong> — <strong>you have not been charged</strong>.</p>
     <p style="color:#888;margin:0 0 16px">Order <strong>#${data.orderNumber}</strong></p>

@@ -9,7 +9,11 @@ export async function generateStaticParams() {
 }
 
 // Long-form buying-guide pages get Article structured data; policy/legal pages (terms, privacy, etc.) don't.
-const GUIDE_SLUGS = new Set(["best-budget-pickleball-paddle", "cheapest-pickleball-paddle", "foam-pickleball-paddle-guide"]);
+const GUIDE_SLUGS = new Set([
+  "best-budget-pickleball-paddle",
+  "foam-pickleball-paddle-guide",
+  "robinhood-longbow-paddle",
+]);
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
