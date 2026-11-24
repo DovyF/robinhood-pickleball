@@ -4,6 +4,7 @@
 // Yom Tov that runs straight into an adjacent Shabbos). We still let
 // customers place orders and authorize their card, we just delay capture.
 import { prisma } from "@/lib/prisma";
+import { buildHolyPeriods } from "@/lib/shabbos-periods";
 
 const DEFAULT_ZIP = "10952";
 const DEFAULT_HAVDALAH_MINUTES = 50;
@@ -57,51 +58,7 @@ async function fetchHolyPeriods(zip: string, havdalahMinutes: number, rangeStart
     const data = await res.json();
     const items: { category: string; date: string; title: string }[] = data.items ?? [];
 
-    const basicPeriods: HolyPeriod[] = [];
-    let pendingStart: Date | null = null;
-    let label = "";
-    for (const item of items) {
-      if (item.category === "candles" && pendingStart === null) {
-        pendingStart = new Date(item.date);
-        label = item.title;
-      } else if (item.category === "havdalah" && pendingStart !== null) {
-        basicPeriods.push({ start: pendingStart, end: new Date(item.date), label });
-        pendingStart = null;
-      }
-    }
-
-    // Contiguous runs of holiday-tagged calendar days (this includes Chol
-    // Hamoed weekdays, since Hebcal marks those "holiday" too).
-    const holidayDates = [...new Set(items.filter((i) => i.category === "holiday").map((i) => i.date.slice(0, 10)))].sort();
-    const runs: { start: string; end: string }[] = [];
-    for (const d of holidayDates) {
-      const prevDay = new Date(Date.parse(`${d}T00:00:00Z`) - 86400_000).toISOString().slice(0, 10);
-      const last = runs[runs.length - 1];
-      if (last && last.end === prevDay) last.end = d;
-      else runs.push({ start: d, end: d });
-    }
-
-    // Merge any basic period whose start falls inside a multi-day holiday run
-    // into one span covering the whole run (so Chol Hamoed weekdays with no
-    // candle-lighting/havdalah of their own still get held).
-    const used = new Set<number>();
-    const periods: HolyPeriod[] = [];
-    for (const run of runs) {
-      const runStart = new Date(`${run.start}T00:00:00Z`);
-      const runEndExclusive = new Date(Date.parse(`${run.end}T00:00:00Z`) + 86400_000);
-      const matches = basicPeriods.map((p, idx) => ({ p, idx })).filter(({ p }) => p.start >= runStart && p.start < runEndExclusive);
-      if (matches.length === 0) continue;
-      matches.forEach(({ idx }) => used.add(idx));
-      const mergedStart = matches.reduce((min, { p }) => (p.start < min ? p.start : min), matches[0].p.start);
-      const mergedEnd = matches.reduce((max, { p }) => (p.end > max ? p.end : max), matches[0].p.end);
-      periods.push({ start: mergedStart, end: mergedEnd, label: matches[0].p.label });
-    }
-    basicPeriods.forEach((p, idx) => {
-      if (!used.has(idx)) periods.push(p);
-    });
-
-    periods.sort((a, b) => a.start.getTime() - b.start.getTime());
-    return periods;
+    return buildHolyPeriods(items);
   } catch {
     return [];
   }
