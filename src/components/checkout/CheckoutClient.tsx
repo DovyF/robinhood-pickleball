@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader2, Lock, Truck, ShieldCheck, Heart, ChevronLeft } from "lucide-react";
+import { Loader2, Lock, Truck, ShieldCheck, Heart, ChevronLeft, Tag, X } from "lucide-react";
 import type { CartView } from "@/lib/cart";
 import type { CheckoutAddress } from "@/lib/orders";
 import type { ShippingRate } from "@/lib/shipping";
@@ -12,6 +12,7 @@ import { Logo } from "@/components/layout/Logo";
 import { US_STATES } from "@/lib/us-states";
 import { formatMoney, cn } from "@/lib/utils";
 import { quoteCheckoutAction, totalsForRateAction, placeOrderAction } from "@/app/actions/checkout";
+import { applyDiscountAction, removeDiscountAction } from "@/app/actions/cart";
 import { StripePayment } from "@/components/checkout/StripePayment";
 
 type Totals = { subtotal: number; discountTotal: number; shippingTotal: number; taxTotal: number; total: number };
@@ -30,6 +31,10 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [payment, setPayment] = useState<{ orderId: string; orderNumber: number; clientSecret: string | null; shabbosHold: boolean; captureAfter: string | null } | null>(null);
+  // Discount code is tracked locally so it can be applied on this page without a full reload.
+  const [discountCode, setDiscountCodeState] = useState<string | null>(cart.discountCode);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState("");
 
   const canQuote = email && addr.firstName && addr.lastName && addr.line1 && addr.city && addr.state && addr.postalCode;
 
@@ -37,16 +42,44 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
     setAddr((a) => ({ ...a, [k]: v }));
   }
 
+  /** Apply or remove a discount code while on checkout, then re-price the selected shipping rate. */
+  async function reprice(nextCode: string | null) {
+    setDiscountCodeState(nextCode);
+    if (rate) {
+      const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: rate.amount, discountCode: nextCode });
+      setTotals(t);
+    }
+  }
+
+  function applyCode(e: React.FormEvent) {
+    e.preventDefault();
+    setCodeError("");
+    startTransition(async () => {
+      const res = await applyDiscountAction(codeInput);
+      if (!res.ok) return setCodeError(res.error ?? "Invalid code");
+      setCodeInput("");
+      await reprice(res.code ?? null);
+    });
+  }
+
+  function removeCode() {
+    setCodeError("");
+    startTransition(async () => {
+      await removeDiscountAction();
+      await reprice(null);
+    });
+  }
+
   function continueToShipping(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     startTransition(async () => {
-      const q = await quoteCheckoutAction({ cartToken: cart.token, address: addr, discountCode: cart.discountCode });
+      const q = await quoteCheckoutAction({ cartToken: cart.token, address: addr, discountCode });
       setRates(q.rates);
       const first = q.rates[0] ?? null;
       setRate(first);
       if (first) {
-        const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: first.amount, discountCode: cart.discountCode });
+        const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: first.amount, discountCode });
         setTotals(t);
       }
       setStep(2);
@@ -56,7 +89,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
   function chooseRate(r: ShippingRate) {
     setRate(r);
     startTransition(async () => {
-      const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: r.amount, discountCode: cart.discountCode });
+      const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: r.amount, discountCode });
       setTotals(t);
     });
   }
@@ -74,7 +107,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
         shippingAmount: rate.amount,
         shippingLabel: rate.label,
         shippingCarrier: rate.carrier,
-        discountCode: cart.discountCode,
+        discountCode,
         marketingOptIn,
       });
       if (!res.ok) return setError(res.error);
@@ -87,6 +120,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
   }
 
   const runningTotal = totals ? totals.total : Math.max(0, cart.subtotal - cart.discountTotal);
+  const shownDiscount = totals ? totals.discountTotal : cart.discountTotal;
 
   return (
     <div className="mx-auto grid min-h-screen max-w-6xl lg:grid-cols-[1fr_440px]">
@@ -224,9 +258,27 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
           ))}
         </ul>
 
-        <dl className="mt-6 space-y-2.5 border-t border-cream-dark pt-6 text-sm">
+        {/* Discount code — applies to the subtotal only (before tax and shipping) */}
+        <div className="mt-6 border-t border-cream-dark pt-6">
+          {discountCode ? (
+            <div className="flex items-center justify-between rounded-lg bg-forest-700/15 px-3 py-2">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-forest-700"><Tag size={15} /> {discountCode}</span>
+              <button type="button" disabled={pending} onClick={removeCode} aria-label="Remove code">
+                <X size={16} className="text-ink-soft hover:text-red-500" />
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={applyCode} className="flex gap-2">
+              <input value={codeInput} onChange={(e) => setCodeInput(e.target.value)} placeholder="Discount code" className="input flex-1 !py-2 text-sm" />
+              <button type="submit" disabled={pending || !codeInput.trim()} className="btn btn-outline !py-2 text-sm disabled:opacity-50">Apply</button>
+            </form>
+          )}
+          {codeError && <p className="mt-1 text-xs text-red-400">{codeError}</p>}
+        </div>
+
+        <dl className="mt-5 space-y-2.5 border-t border-cream-dark pt-5 text-sm">
           <div className="flex justify-between"><dt className="text-ink-soft">Subtotal</dt><dd className="text-white">{formatMoney(cart.subtotal)}</dd></div>
-          {cart.discountTotal > 0 && <div className="flex justify-between text-forest-700"><dt>Discount</dt><dd>−{formatMoney(cart.discountTotal)}</dd></div>}
+          {shownDiscount > 0 && <div className="flex justify-between text-forest-700"><dt>Discount</dt><dd>−{formatMoney(shownDiscount)}</dd></div>}
           <div className="flex justify-between"><dt className="text-ink-soft">Shipping</dt><dd className="text-white">{totals ? (totals.shippingTotal === 0 ? "Free" : formatMoney(totals.shippingTotal)) : "Calculated next"}</dd></div>
           <div className="flex justify-between"><dt className="text-ink-soft">Tax</dt><dd className="text-white">{totals ? formatMoney(totals.taxTotal) : "—"}</dd></div>
           <div className="flex justify-between border-t border-cream-dark pt-3 text-lg font-bold">
