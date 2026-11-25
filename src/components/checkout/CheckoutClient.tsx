@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,6 +35,7 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
   const [discountCode, setDiscountCodeState] = useState<string | null>(cart.discountCode);
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState("");
+  const [discountPreview, setDiscountPreview] = useState<number | null>(null);
 
   const canQuote = email && addr.firstName && addr.lastName && addr.line1 && addr.city && addr.state && addr.postalCode;
 
@@ -45,11 +46,17 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
   /** Apply or remove a discount code while on checkout, then re-price the selected shipping rate. */
   async function reprice(nextCode: string | null) {
     setDiscountCodeState(nextCode);
-    if (rate) {
-      const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: rate.amount, discountCode: nextCode });
-      setTotals(t);
-    }
+    const t = await totalsForRateAction({ cartToken: cart.token, address: addr, shippingAmount: rate?.amount ?? 0, discountCode: nextCode });
+    setDiscountPreview(t.discountTotal);
+    // Only show full totals (shipping + tax) once a shipping rate is chosen.
+    if (rate) setTotals(t);
   }
+
+  // A code already on the cart (applied on the cart page) should show its discount right away.
+  useEffect(() => {
+    if (cart.discountCode) startTransition(() => { void reprice(cart.discountCode); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function applyCode(e: React.FormEvent) {
     e.preventDefault();
@@ -119,8 +126,8 @@ export function CheckoutClient({ cart, defaultEmail, stripeKey }: { cart: CartVi
     });
   }
 
-  const runningTotal = totals ? totals.total : Math.max(0, cart.subtotal - cart.discountTotal);
-  const shownDiscount = totals ? totals.discountTotal : cart.discountTotal;
+  const shownDiscount = totals ? totals.discountTotal : discountPreview ?? cart.discountTotal;
+  const runningTotal = totals ? totals.total : Math.max(0, cart.subtotal - shownDiscount);
 
   return (
     <div className="mx-auto grid min-h-screen max-w-6xl lg:grid-cols-[1fr_440px]">
