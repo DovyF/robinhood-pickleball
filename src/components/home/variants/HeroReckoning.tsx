@@ -43,7 +43,7 @@ export function HeroReckoning({ unitsLeft = 190 }: { unitsLeft?: number }) {
           </div>
 
           <ul className="animate-hero-rise mt-9 flex flex-col gap-3 text-sm text-ink-soft sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7" style={{ animationDelay: "520ms" }}>
-            <li className="inline-flex items-center gap-2"><Sparkles size={15} className="shrink-0 text-forest-700" /> Only {unitsLeft} left in the first batch</li>
+            <li className="inline-flex items-center gap-2"><Sparkles size={15} className="shrink-0 text-forest-700" /> Under 200 left in the first batch</li>
             <li className="inline-flex items-center gap-2"><RotateCcw size={15} className="shrink-0 text-forest-700" /> 21-day returns</li>
             <li className="inline-flex items-center gap-2"><Heart size={15} className="shrink-0 text-forest-700" /> 10% donated</li>
           </ul>

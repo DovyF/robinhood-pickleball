@@ -128,7 +128,7 @@ export function ProductView({ product }: ProductViewProps) {
             <Price amount={price} compareAt={compareAt} size="lg" />
             {tracked && stock > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-forest-700/40 bg-forest-700/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-forest-700">
-                <Sparkles size={12} /> Only {stock} left
+                <Sparkles size={12} /> {stock >= 100 ? "Under 200 left" : `Only ${stock} left`}
               </span>
             )}
           </div>

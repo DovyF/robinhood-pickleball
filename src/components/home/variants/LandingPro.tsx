@@ -25,7 +25,7 @@ const FAQS: [string, string][] = [
   ["What's the cheapest pickleball paddle that's actually good?", "Cheap paddles under $40-50 are usually a genuine downgrade — thin faces, basic cores, short lifespan. The Longbow is priced at $99.99, which is the low end of \"actually good\" — carbon-fiber face, foam core, built to the same spec as $250 paddles — rather than the lowest price point overall."],
   ["How does shipping work?", "Ships from the US via USPS — Ground Advantage or Priority Mail, calculated to your address at checkout."],
   ["Is there a warranty?", "Yes — a 6-month warranty against manufacturing defects. (It doesn't cover normal wear, or damage from misuse like cracking it on the ground.)"],
-  ["Why only 190?", "This is the founder's first production batch, priced while USAPA certification is still in progress. Once it's gone, the next batch ships at $115."],
+  ["Why under 200?", "This is the founder's first production batch, priced while USAPA certification is still in progress. Once it's gone, the next batch ships at $115."],
 ];
 
 export function LandingPro() {
@@ -50,7 +50,7 @@ export function LandingPro() {
       <section className="border-y border-[#1e1e1e] bg-[#0d0d0d]">
         <div className="container-x grid grid-cols-2 gap-6 py-6 md:grid-cols-4">
           {[
-            { Icon: Sparkles, t: `Only ${UNITS_LEFT} left`, s: "First batch" },
+            { Icon: Sparkles, t: "Under 200 left", s: "First batch" },
             { Icon: RotateCcw, t: "21-day returns", s: "On unused paddles" },
             { Icon: ShieldCheck, t: "6-month warranty", s: "Against defects" },
             { Icon: Heart, t: "10% donated", s: "To those in need" },
@@ -207,7 +207,7 @@ export function LandingPro() {
             ))}
           </div>
           <Link href={PRODUCT_HREF} className="btn btn-primary mt-10 text-lg">Get the Longbow — {PRICE.sale} <ArrowRight size={20} /></Link>
-          <p className="mt-4 text-sm text-forest-700">Only {UNITS_LEFT} left in the first batch · next batch ships at $115</p>
+          <p className="mt-4 text-sm text-forest-700">Under 200 left in the first batch · next batch ships at $115</p>
         </Reveal>
       </section>
 

@@ -31,7 +31,7 @@ export function StickyBuyBar({ image, href, unitsLeft }: { image: string; href: 
           <img src={image} alt="" className="h-11 w-11 rounded-lg object-cover" />
           <div>
             <p className="font-display text-lg leading-none tracking-wide text-white">The Longbow</p>
-            <p className="text-sm text-forest-700">$99.99 <span className="text-ink-soft">· only {unitsLeft} left</span></p>
+            <p className="text-sm text-forest-700">$99.99 <span className="text-ink-soft">· under 200 left</span></p>
           </div>
         </div>
         <Link href={href} className="btn btn-primary">Add to cart</Link>
